@@ -1,0 +1,434 @@
+---+!! !VirtualHostingContrib
+<!--
+One line description, required for extensions repository catalog.
+BuildContrib will fill in the SHORTDESCRIPTION with the value of
+$SHORTDESCRIPTION from the .pm module, or you can redefine it here if you
+prefer.
+   * Set SHORTDESCRIPTION = %$SHORTDESCRIPTION%
+-->
+
+<img style="float:right" src="%ATTACHURL%/logo-colivre.png" />
+
+%SHORTDESCRIPTION%
+
+%TOC%
+
+---++ Overview
+
+VirtualHostingContrib provides the ability of using a single Foswiki
+installation to serve differents sets of webs under different host names. Such
+different hostnames by which users access different content are known as
+_virtual hosts_.
+
+For users, it will look like they have an exclusive Foswiki installation. The
+system administrator, however, needs to maintain and upgrade a single Foswiki
+installation. This solution allows for instance service providers to offer
+Foswiki systems without having a linear increase in maintainance effort.
+
+---++ Installation Instructions
+
+%$INSTALL_INSTRUCTIONS%
+
+---++ Configuration
+
+VirtualHostingContrib works by providing an alternative entry point to the
+classic Foswiki scripts interface. To use it, you need to configure your
+webserver so that requests to e.g. =/foswiki/bin/view= are actually handled by
+the =/foswiki/bin/virtualhosts= CGI script. Such script will play the role of
+all the other scripts, but before serving each request it will setup the
+appropriate environment for the virtual host being used.
+
+---+++ Lighttpd
+
+TODO
+
+---+++ Apache
+
+TODO
+
+---+++ Using <nop/>FastCGI
+
+The =virtualhosts= script is a regular CGI script, and as such it may exhibit
+poor performance in sites with low computing power or high usage, just like
+regular Foswiki. VirtualHostingContrib provides a !FastCGI version of the
+script.
+
+To use it:
+
+   1 Make sure you have [[Foswiki:Extensions/FastCGIEngineContrib][FastCGIEngineContrib]]
+     installed and properly working on your system.
+   1 In your web server configuration, replace the references to the
+     =foswiki.fcgi= script provided by !FastCGIEngineContrib with
+     =virtualhosts.fcgi= provided by VirtualHostingContrib.
+   1 Reload your web server configuration to apply the changes.
+
+---++ Virtual hosts management
+
+This section describes how to perform common maintenance activities on your
+virtual hosts.
+
+---+++ Settings
+
+The following settings are available for this contrib in the Foswiki
+configuration interface:
+
+| *Setting* | *Meaning* | *Default value* |
+| =VirtualHostsDir= | The directory in which you virtual hosts are stored | =$Foswiki::cfg{DataDir}/../virtualhosts= |
+
+---+++ The structure of a virtualhost
+
+Each virtual host consists of a subdirectory of
+=$Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir}=, named after the
+hostname it is intended to serve. Take the following example:
+
+<verbatim>
+  virtualhosts/
+    example.com/
+      ...
+    mydomain.net/
+      ...
+</verbatim>
+
+In this case, there are two virtual hosts, one for the =example.com= domain and
+other for the =mydomain.net= domain.
+
+Inside each virtual host directory, there are some directories that resemble
+the ones in the main Foswiki installation:
+
+| *Directory* | *Stores* |
+| =data/= | topic data |
+| =pub/= | attachments and other files that must be directly accessible by clients |
+| =templates/= | custom templates for this virtual host only |
+| =working/= | all sorts of temporary data |
+
+---+++ virtual host specific settings
+
+In each virtual host root, the server administrator can put a file called
+=VirtualHost.cfg=, which may contain Foswiki configuration variables. This way
+you can have different settings for different virtual hosts. For example, you
+can have some virtual hosts using the standard .htpasswd Foswiki user
+management, and others using !LDAP to authenticate users.
+
+To create your local configuration, just create a file called =VirtualHost.cfg=
+inside the virtual host directory. Inside the file, you use the =$VirtualHost=
+hash the same way you would use =$Foswiki::cfg= in the global Foswiki
+configuration.
+
+Example:
+
+<verbatim>
+# disable FooPlugin in this virtual host
+$VirtualHost{Plugins}{FooPlugin}{Enabled} = 0;
+
+# use LDAP contrib in this virtual host
+$VirtualHost{PasswordManager} = 'Foswiki::Users::LdapPasswdUser';
+$VirtualHost{UserMappingManager} = 'Foswiki::Users::LdapUserMapping';
+# ...
+</verbatim>
+
+Note that <strong>all occurrances of =$Foswiki::cfg= in the virtual host
+configuration will be replaced by =$VirtualHost=.</strong> This way you can
+still copy and paste configuration examples into your virtual host
+configuration, but the virtual host configuration won't affect the global
+configuration. A side effect of this is that you cannot do smart things such
+as:
+
+<verbatim>
+$Foswiki::cfg{AuthScripts} .= ',view';
+</verbatim>
+
+%RED% *Warning:* %ENDCOLOR% just like Foswiki's global configuration file
+=LocalSite.cfg=, virtual host configuration files are executed as Perl code.
+%So the system administrator must be completely sure of what to put in that
+%configuration file.
+
+---+++ Creating/removing/renaming virtual hosts
+
+*To create a virtual host*, you can use the provided script at
+=tools/virtualhosts-create.sh=. To create a virtual host for the example.com
+domain, you should run it like that:
+
+<verbatim>
+$ ./tools/virtualhosts-create.sh example.com
+</verbatim>
+
+If you run this script as a user different from the one that runs the Foswiki
+code (e.g. you create the virtualhost as =root= but your web server runs as
+=www-data= or =nobody=), the =data/= and =pub/= directories will be their
+ownership properly set to the correct user (i.e. =www-data= or =nobody=).
+
+If you have a special virtual host called =_template=, then it will be copied
+over to the new virtual host. If there is no =_template= virtual host, the
+script will create the virtual host by copying files from the main Foswiki
+data; this is indicated if your installation contains only virtual hosts, so
+the main Foswiki data will always be clean. You can also create a =_template=
+virtual host manually by copying the files from a Foswiki release tarball,
+or by manually creating the data you want for every newly created virtual hosts.  If
+your installation is brand new and you plan to use the main Foswiki data
+afterwards, you can also create the =_template= virtual host using the script,
+and that will _freeze_ a copy of the main Foswiki data for new virtual hosts
+created later.
+
+If you have a text file called =_template.conf= in your virtual hosts
+directory, when you create a virtual host for example.com you'll also get a
+=example.com.conf= file which is just equal to the =_template.conf= file,
+except that all occurrences of =%<nop/>VIRTUALHOST%= will be replaced by the
+virtual host name (=example.com= in this example). __Note__ that
+!VirtualHostingContrib does not care about the contents of the file, it just
+takes the content of =_template.conf=, replaces all occurrences of
+%VIRTUALHOST% by the virtual host name, and that's it.
+
+*To remove a virtual host*, just remove the its files.  If you are removing the
+virtual host for =example.com=, and your virtual hosts are stored in
+/var/lib/foswiki/virtualhosts (see [[#Settings]]), then it is enough to remove
+the =/var/lib/foswiki/virtualhosts/example.com= directory, plus any webserver
+configuration you have for that virtual host. Your mileage may vary.
+
+*To rename a virtual host*, you just have to rename it's directory, and if it's
+the case, change the configuration files accordingly.  Beware that after
+renaming a virtual host its data will _no longer_ be available at the old
+domain name.
+
+---+++ Running command line tools against the virtual hosts
+
+TODO
+
+---++ How it works
+
+This section describes the internals of VirtualHostingContrib, and is intended
+for developers and system administrators. If it's not your case, please feel
+free to skip it.
+
+---+++ Tweaking the global configuration
+
+In order to serve different sets of webs within the same Foswiki installation,
+we need to tweak the Foswiki configuration to change some settings, such as
+=DataDir= and =PubDir= (the directories where topic text and attachments are
+stored, respectively).
+
+The Foswiki configuration is loaded during compilation time, but when using
+persistent execution models (e.g. !ModPerl, !FastCGI), the Foswiki Perl code is
+compiled only once for multiple requests.  This wat, the needed configuration
+tweaking must be done once for each request, and moreover must not not leave
+any trail for the next request, which will possibly be handlind a different
+virtual host (and thus different settings for =DataDir=, =PubDir=, etc.).
+
+We need something like this:
+
+<verbatim>
+               +-----------------+
+               |                 |
+    +----------+ Foswiki startup +
+    |          |                 |
+    |          +-----------------+
+    | Main
+    | configuration
+    | loaded
+    |
+    |           Configuration cleaned
+    |    +---------------------------------+
+    |    |                                 |
+    |    V                                 |
++------------------+             +---------+---------+
+|                  |             |                   |
+| Incoming Request +             | Outgoing Response +
+|                  |             |                   |
++--------+---------+             +-------------------+
+         |                                 ^
+         | Configuration ajusted           |
+         | for current virtual host        |
+         |                                 |
+         |                                 |
+         |     +--------------------+      |
+         |     |                    |      |
+         +---->| Request processing +------+
+               | (conf. loaded)     |
+               +--------------------+
+</verbatim>
+
+Since all Foswiki-specific processing happens inside the "Request processing"
+box, then if we manage to tweak the configuration before it is run and to
+restore it
+
+---+++ The Foswiki engines system
+
+All requests are processes by the current Foswiki engine in the following way
+(=$self= is the engine object):
+
+| 1 | A Request object is prepared, | <code>$req = $self->prepare()</code> |
+| 2 | The processing is delegated to the =Foswiki::UI= module. This module detects what was the called script (view, edit, attach etc.), instantiates a =Foswiki= session and does all of the actual processing to produce a result for the client. In special, this phase is the only one in which the vast majority of the Foswiki configuration matters. | <code>$res = Foswiki::UI::handleRequest($req)</code> |
+| 3 | The engine does a cleanup and sends the response back to the client | $self->finalize($req, $req) |
+
+So, our objective is to wrap *step 2* as the figure above shows: we adjust the
+configuration for the current request just before entering
+=Foswiki::UI::handleRequest=, and restore the configuration just after it
+finishes.
+
+---+++ The Perl =local()= construct
+
+The Perl =local()= construct enables the programmer to set a global variable
+until the end of the current block. After the current block exits, the value is
+restored to its original value. This can be also used with hash elements: in
+this case, only the elements changed with =local= are restored when the scope
+ends.
+
+Example:
+<verbatim>
+use Foswiki;
+# Assume that DataDir is set initially to "/path/to/foswiki/data"
+print $Foswiki::cfg{DataDir}, "\n"
+{
+   local = $Foswiki::cfg{DataDir} = "/path/to/virtualhosts/example.com/data";
+   print $Foswiki::cfg{DataDir}, "\n";
+}
+print $Foswiki::cfg{DataDir}, "\n"
+</verbatim>
+
+The above example will print the following:
+
+<verbatim>
+/path/to/foswiki/data
+/path/to/virtualhosts/example.com/data
+/path/to/foswiki/data
+</verbatim>
+
+This way we can override the settings we need, and also gain the cleanup step
+for free since Perl will automatically revert all changes done with local when
+the block ends.
+
+For more information on =local()=, please refer to "Temporary Values via
+local()" in the perlsub(1) manpage (you must have Perl's documentation
+installed in your system).
+
+---+++ Wrapping it up
+
+What VirtualHostingContrib does is to wrap the Foswiki::UI::handleRequest so
+that the configuration is tweaked just before actually handling the request,
+using the approach described above. The two extra CGI scripts provided are
+equal to the ones in Foswiki core and !FastCGIEngineContrib, but after loading
+Foswiki::UI, they load the VirtualHostingContrib module that does the wrapping
+around Foswiki::UI::handleRequest.
+
+---++ Info for developers
+
+This section presents tips for developing of virtualhost-friendly code:
+
+---+++ reading Foswiki configuration values
+
+When you need to read Foswiki configuration options, make sure you do not do it
+during compile Time. Since virtualhost requests temporarily redefine part of
+the configuration, if you freeze a configuration value during a request for
+virtualhost A, you'll probably have problems when using that value in a request
+for virtualhost B.
+
+Example: if you do something like this:
+
+<verbatim>
+use vars qw($RE);
+BEGIN {
+  $RE = qr/$Foswiki::cfg{SomeOption}/;
+}
+</verbatim>
+
+If this code runs under !ModPerl, !FastCGI or other persistent engine, Then the
+<code>$RE</code> variable will be initialized in the first time that code is
+loaded, and that may be in the context of a specific virtual host. In a future
+request, $RE will still contain a value derived from the value of
+<code>$Foswiki::cfg{SomeOption}</code> for the original virtualhost, even if
+the current virtualhost redefines <code>$Foswiki::cfg{SomeOption}</code>.
+
+To fix this, you should avoid initializing values that depend on the
+configuration during compile-time. Instead, compose the values you need during
+runtime:
+
+<verbatim>
+sub do_stuff {
+  my $RE = qr/$Foswiki::cfg{SomeOption}/;
+  // use $RE here ...
+}
+</verbatim>
+
+or in a OO context:
+
+<verbatim>
+sub new {
+  // ...
+  $this->{RE} = qr/$Foswiki::cfg{SomeOption}/;
+  // ...
+}
+
+sub method {
+  my $this = shift;
+  // use $this->{RE} ...
+}
+</verbatim>
+
+---+++ Avoid using the 'o' regular expression flag together with configuration values
+
+If you need a regular expression that is composed from values in the
+configuration, make sure you don't use the 'o' flag, which causes the regular
+expression to be compiled only once. For example, in the following code the
+<code>$Foswiki::cfg{SomeOption}</code> will be expanded only in the first time
+the expression is evaluated:
+
+<verbatim>
+my $RE = qr/$Foswiki::cfg{SomeOption}/o;
+</verbatim>
+
+Even is a virtualhost redefined <code>$Foswiki::cfg{SomeOption}</code>, the
+value used in that regular expression will be the value defined in the context
+of the virtualhost that was being processed during the first time that
+expression was evaluated.
+
+So, avoid the 'o' flag when interpolating configuration values in regular
+expressions. The following real code shows the problem:
+
+<verbatim>
+use vars qw($GLOBAL);
+
+$GLOBAL = 'Main';
+
+sub f {
+  my $re = qr/(?:$GLOBAL\.)/o;
+  print $re, "\n";
+}
+
+f();
+$GLOBAL = 'Users';
+f();
+</verbatim>
+
+The two calls to f() will print the same value, based on the value
+<code>$GLOBAL</code> has in the first time the regular expression was
+evaluated:
+
+<verbatim>
+$ perl test.pl
+(?-xism:(?:Main\.))
+(?-xism:(?:Main\.))
+</verbatim>
+
+If you remove the 'o' flag from the regular expresion, you will obtain the
+desired result:
+
+<verbatim>
+$ perl test.pl
+(?-xism:(?:Main\.))
+(?-xism:(?:Users\.))
+</verbatim>
+
+---++ Info
+
+Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
+
+|  Author(s): | |
+|  Copyright: | &copy; |
+|  License: | [[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]] |
+|  Release: | %$RELEASE% |
+|  Version: | %$VERSION% |
+|  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  Dependencies: | %$DEPENDENCIES% |
+|  Home page: | http://foswiki.org/bin/view/Extensions/VirtualHostingContrib |
+|  Support: | http://foswiki.org/bin/view/Support/VirtualHostingContrib |
+
+<!-- Do _not_ attempt to edit this topic; it is auto-generated. -->

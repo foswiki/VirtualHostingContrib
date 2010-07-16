@@ -1,0 +1,13 @@
+# Release manifest for VirtualHostingContrib
+data/System/VirtualHostingContrib.txt 0644 Documentation
+lib/Foswiki/Contrib/VirtualHostingContrib.pm 0644 Perl module
+lib/Foswiki/Contrib/VirtualHostingContrib/VirtualHost.pm 0644 Perl module
+lib/Foswiki/Contrib/VirtualHostingContrib/Config.spec 0644 Configuration template
+test/unit/VirtualHostingContrib/VirtualHostingContribSuite.pm 0644 Perl test file
+test/unit/VirtualHostingContrib/VirtualHostTests.pm 0644 Perl test file
+bin/virtualhosts 0755 CGI script
+bin/virtualhosts.fcgi 0755 FastCGI script
+tools/virtualhosts-lighttpd.pl 0755 Development server script
+tools/virtualhosts-create.sh 0755 Utility script
+tools/virtualhosts-mailnotify 0755 Utility script
+pub/System/VirtualHostingContrib/logo-colivre.png 0644 Sponsor logo
