@@ -421,7 +421,7 @@ $ perl test.pl
 
 Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 
-|  Author(s): | |
+|  Author(s): | [[Foswiki:Main/AntonioTerceiro][Antonio Terceiro]], [[Foswiki:Main/JoenioCosta][Joenio Costa]] |
 |  Copyright: | &copy; |
 |  License: | [[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]] |
 |  Release: | %$RELEASE% |
