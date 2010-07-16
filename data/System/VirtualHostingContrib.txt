@@ -422,11 +422,12 @@ $ perl test.pl
 Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 
 |  Author(s): | [[Foswiki:Main/AntonioTerceiro][Antonio Terceiro]], [[Foswiki:Main/JoenioCosta][Joenio Costa]] |
-|  Copyright: | &copy; |
+|  Copyright: | &copy; 2010 [[http://www.colivre.coop.br/][Colivre]] |
 |  License: | [[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]] |
 |  Release: | %$RELEASE% |
 |  Version: | %$VERSION% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|                  | 16 Jul 2010: first release ([[Foswiki::Main/AntonioTerceiro][Antonio Terceiro]])  |
 |  Dependencies: | %$DEPENDENCIES% |
 |  Home page: | http://foswiki.org/bin/view/Extensions/VirtualHostingContrib |
 |  Support: | http://foswiki.org/bin/view/Support/VirtualHostingContrib |
