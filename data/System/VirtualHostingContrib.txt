@@ -248,7 +248,8 @@ We need something like this:
 
 Since all Foswiki-specific processing happens inside the "Request processing"
 box, then if we manage to tweak the configuration before it is run and to
-restore it
+restore it after the request is processed, we are all set. For that, we hook in
+the Foswiki engines system.
 
 ---+++ The Foswiki engines system
 
@@ -427,6 +428,7 @@ Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 |  Release: | %$RELEASE% |
 |  Version: | %$VERSION% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  02 Nov 2010(2): | code cleanup and performance optimization -- Foswiki:Main/AntonioTerceiro |
 |  02 Nov 2010:    | added support for listening on non-standard ports; performance optimization -- Foswiki:Main/AntonioTerceiro |
 |  16 Jul 2010:    | first release ([[Foswiki:Main/AntonioTerceiro][Antonio Terceiro]])  |
 |  Dependencies: | %$DEPENDENCIES% |
