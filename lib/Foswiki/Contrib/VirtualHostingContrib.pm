@@ -45,7 +45,7 @@ BEGIN {
   *Foswiki::UI::handleRequest = sub {
     my ($req) = shift;
 
-    my $virtual_host = Foswiki::Contrib::VirtualHostingContrib::VirtualHost->find($req->virtual_host());
+    my $virtual_host = Foswiki::Contrib::VirtualHostingContrib::VirtualHost->find($req->virtual_host(), $req->virtual_port());
 
     if ($virtual_host) {
       # change the process name during the request

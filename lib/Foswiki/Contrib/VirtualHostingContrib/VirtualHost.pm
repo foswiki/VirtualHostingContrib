@@ -14,7 +14,7 @@ BEGIN {
 }
 
 sub find {
-  my ($class, $hostname) = @_;
+  my ($class, $hostname, $port) = @_;
   $hostname = _validate_hostname($hostname);
   if (!$hostname) {
     return undef;
@@ -35,7 +35,7 @@ sub find {
       DataDir               => $DataDir,
       PubDir                => $PubDir,
       WorkingDir            => $WorkingDir,
-      DefaultUrlHost        => "http://$hostname",
+      DefaultUrlHost        => "http://$hostname" . ($port && ($port ne '80') && ($port ne '443') ? (':' . $port) : ''),
       # values defined in terms of DataDir
       Htpasswd => {
         FileName            => "$DataDir/.htpasswd",
@@ -74,21 +74,23 @@ sub run {
 
   local $Foswiki::Contrib::VirtualHostingContrib::VirtualHost::CURRENT = $self->hostname;
 
-  $self->_run_with_local_configuration($code, %{$self->{config}});
+  $self->_run_with_local_configuration($code, { %{$self->{config}} });
 }
 
 # Recursive method; consumes the local configuration, updates Foswiki global
 # configuration with local() and runs the code inside the virtualhost.  This
 # method needs to be recursive because if the configurations were set in a
 # loop, the local() declarations would lose their scope just after the loop.
+#
+# Note that $config will be consumed in recursive calls, so make sure you pass
+# a copy of your actual data.
 sub _run_with_local_configuration {
-  my ($self, $code, %config) = @_;
-  if (scalar(%config)) {
-    my @keys = keys(%config);
-    my $key = $keys[0];
-    local $Foswiki::cfg{$key} = _merge_config($Foswiki::cfg{$key}, $config{$key});
-    delete $config{$key};
-    $self->_run_with_local_configuration($code, %config);
+  my ($self, $code, $config) = @_;
+  if (scalar(%$config)) {
+    my $key = (keys(%$config))[0];
+    local $Foswiki::cfg{$key} = _merge_config($Foswiki::cfg{$key}, $config->{$key});
+    delete $config->{$key};
+    $self->_run_with_local_configuration($code, $config);
   } else {
     &$code();
   }
