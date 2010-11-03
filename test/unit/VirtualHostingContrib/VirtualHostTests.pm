@@ -329,6 +329,8 @@ sub test_merge_config {
   $this->assert_deep_equals({}, &$merge({}, {}));
   $this->assert_deep_equals({ X => 2 }, &$merge({ X => 1 }, { X => 2 }));
   $this->assert_deep_equals({ X => { X1 => 1, X2 => 2 } }, &$merge({ X => { X1 => 0 } }, { X => => { X1 => 1, X2 => 2} }));
+  $this->assert_deep_equals({ X => 1}, &$merge(1, { X => 1}));
+  $this->assert_deep_equals(1, &$merge({ X => 1}, 1));
 
   my %global = (); $global{Languages}{pt}{Enabled} = 0;
   my %local = (); $local{Languages}{pt}{Enabled} = 1;

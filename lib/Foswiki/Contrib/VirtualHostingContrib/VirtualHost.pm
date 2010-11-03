@@ -81,7 +81,7 @@ sub run {
 
 sub _merge_config {
   my ($global, $local)= @_;
-  if (ref($global) eq 'HASH' || ($local) eq 'HASH') {
+  if (ref($global) eq 'HASH' && ref($local) eq 'HASH') {
     # merge hashes
     my %newhash = %{$global};
     for my $key (keys(%{$local})) {
