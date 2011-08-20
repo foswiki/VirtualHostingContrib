@@ -22,7 +22,9 @@ sub find {
 
   # check whether the given virtual host directory exists or not
   if (!$class->exists($hostname)) {
-    return undef;
+
+    $hostname = $Foswiki::cfg{VirtualHostingContrib}{ServerAlias}{$hostname};
+    return undef unless defined $hostname;
   }
 
   my $DataDir         = $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . "/$hostname/data";
@@ -40,10 +42,13 @@ sub find {
       Htpasswd => {
         FileName            => "$DataDir/.htpasswd",
       },
-      ConfigurationLogName  => "$DataDir/configurationlog.txt",
-      DebugFileName         => "$DataDir/debug%DATE%.txt",
-      WarningFileName       => "$DataDir/warn%DATE%.txt",
-      LogFileName           => "$DataDir/log%DATE%.txt",
+      Log => {
+        Dir => $WorkingDir."/logs",
+      },
+      Cache => {
+        RootDir => $WorkingDir."/cache",
+        DBFile => $WorkingDir."/cache/foswiki_db",
+      },
       RCS => {
         WorkAreaDir         => "$WorkingDir/work_areas",
       },
@@ -66,7 +71,7 @@ sub hostname {
 
 sub exists {
   my ($class, $hostname) = @_;
-  return -d $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . "/$hostname/data";
+  return -d $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . "/$hostname/data"
 }
 
 sub run {
@@ -98,10 +103,26 @@ sub run_on_each {
   my ($class, $code) = @_;
   my @hostnames = map { basename $_} glob($Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . '/*');
   @hostnames = grep { $class->exists($_) && $_ ne '_template' } @hostnames;
+
   for my $hostname (@hostnames) {
     my $virtual_host = $class->find($hostname);
     $virtual_host->run($code);
   }
+}
+
+# StaticMethod
+sub run_on {
+  my ($class, $hostname, $code) = @_;
+
+  my %hostnames =
+    map { $_ => 1 }
+    grep { $class->exists($_) && $_ ne '_template' }
+    map { basename $_} glob($Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . '/*');
+
+  die "ERROR: unknown virtual host $hostname" unless defined $hostnames{$hostname};
+
+  my $virtual_host = $class->find($hostname);
+  $virtual_host->run($code);
 }
 
 sub _config {

@@ -74,6 +74,7 @@ configuration interface:
 
 | *Setting* | *Meaning* | *Default value* |
 | =VirtualHostsDir= | The directory in which you virtual hosts are stored | =$Foswiki::cfg{DataDir}/../virtualhosts= |
+| =ServerAlias= | a mapping of aliases to real hostnames | |
 
 ---+++ The structure of a virtualhost
 
@@ -101,7 +102,7 @@ the ones in the main Foswiki installation:
 | =templates/= | custom templates for this virtual host only |
 | =working/= | all sorts of temporary data |
 
----+++ virtual host specific settings
+---+++ Virtual host specific settings
 
 In each virtual host root, the server administrator can put a file called
 =VirtualHost.cfg=, which may contain Foswiki configuration variables. This way
@@ -428,6 +429,7 @@ Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 |  Release: | %$RELEASE% |
 |  Version: | %$VERSION% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  20 Aug 2011: | added server aliases; fixed interfacing new logger api; added =run_on()= api; -- Foswiki:Main/MichaelDaum |
 |  02 Nov 2010(2): | code cleanup and performance optimization -- Foswiki:Main/AntonioTerceiro |
 |  02 Nov 2010:    | added support for listening on non-standard ports; performance optimization -- Foswiki:Main/AntonioTerceiro |
 |  16 Jul 2010:    | first release ([[Foswiki:Main/AntonioTerceiro][Antonio Terceiro]])  |
