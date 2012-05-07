@@ -19,7 +19,7 @@ use strict;
 # *must* exist in this package. This should always be in the format
 # $Rev: 3193 $ so that Foswiki can determine the checked-in status of the
 # extension.
-our $VERSION = '$Rev$';    # version of *this file*.
+our $VERSION = '$Rev$'; # version of *this file*.
 
 # $RELEASE is used in the "Find More Extensions" automation in configure.
 # It is a manually maintained string used to identify functionality steps.
@@ -38,44 +38,34 @@ our $SHORTDESCRIPTION = 'Adds virtual hosting support for Foswiki.';
 use Foswiki::Contrib::VirtualHostingContrib::VirtualHost;
 
 BEGIN {
-    no warnings 'redefine';
+  no warnings 'redefine';
 
-    *Foswiki::UI::handleRequest_implementation = \&Foswiki::UI::handleRequest;
+  *Foswiki::UI::handleRequest_implementation = \&Foswiki::UI::handleRequest;
 
-    *Foswiki::UI::handleRequest = sub {
-        my ($req) = shift;
+  *Foswiki::UI::handleRequest = sub {
+    my ($req) = shift;
 
-        my $virtual_host =
-          Foswiki::Contrib::VirtualHostingContrib::VirtualHost->find(
-            $req->virtual_host(), $req->virtual_port() );
+    my $virtual_host = Foswiki::Contrib::VirtualHostingContrib::VirtualHost->find($req->virtual_host(), $req->virtual_port());
 
-        if ($virtual_host) {
+    if ($virtual_host) {
+      # change the process name during the request
+      local $0 = sprintf("foswiki-virtualhost[%s%s]", $virtual_host->hostname(), $req->uri());
 
-            # change the process name during the request
-            local $0 = sprintf(
-                "foswiki-virtualhost[%s%s]",
-                $virtual_host->hostname(),
-                $req->uri()
-            );
-
-            # serve under the virtual host
-            $virtual_host->run(
-                sub { Foswiki::UI::handleRequest_implementation($req); } );
-        }
-        else {
-
-            # no virtual host: bail out
-            my $res = new Foswiki::Response;
-            $res->status(501);    # 501 Not Implemented
-            $res->header( -type => 'text/html', -charset => 'utf-8' );
-            while (<DATA>) {
-                s/\$hostname/$req->virtual_host()/ge;
-s/\$logo/$Foswiki::cfg{PubUrlPath}\/System\/ProjectLogos\/foswiki-logo.png/g;
-                $res->print($_);
-            }
-            return $res;
-        }
+      # serve under the virtual host
+      $virtual_host->run(sub { Foswiki::UI::handleRequest_implementation($req); });
+    } else {
+      # no virtual host: bail out
+      my $res = new Foswiki::Response;
+      $res->status(501); # 501 Not Implemented
+      $res->header(-type => 'text/html', -charset => 'utf-8');
+      while (<DATA>) {
+        s/\$hostname/$req->virtual_host()/ge;
+        s/\$logo/$Foswiki::cfg{PubUrlPath}\/System\/ProjectLogos\/foswiki-logo.png/g;
+        $res->print($_);
       }
+      return $res;
+    }
+  }
 }
 
 __DATA__
