@@ -1,0 +1,72 @@
+#!/usr/bin/perl -wT
+# See bottom of file for license and copyright information
+use strict;
+use warnings;
+
+BEGIN {
+    $Foswiki::cfg{Engine} = 'Foswiki::Engine::CLI';
+    require Carp;
+    $SIG{__DIE__} = \&Carp::confess;
+    if (-e './setlib.cfg') {
+      unshift @INC, '.';
+    } elsif (-e '../bin/setlib.cfg') {
+      unshift @INC, '../bin';
+    }
+    require 'setlib.cfg';
+    $ENV{FOSWIKI_ACTION} = 'view';
+}
+
+use Foswiki ();
+use Foswiki::UI ();
+use Foswiki::Contrib::VirtualHostingContrib::VirtualHost ();
+
+my $verbose = 1;
+my $hostname = '';
+
+foreach my $arg (@ARGV) {
+  if ($arg =~ /^(.*)=(.*)$/) {
+    if ($1 eq 'verbose') {
+      $verbose = ($2 eq 'on')?1:0;
+    } elsif ($1 eq 'host') {
+      $hostname = $2;
+    }
+  }
+}
+
+if ($hostname) {
+  Foswiki::Contrib::VirtualHostingContrib::VirtualHost->run_on($hostname, \&doit);
+} else {
+  Foswiki::Contrib::VirtualHostingContrib::VirtualHost->run_on_each(\&doit);
+}
+
+sub doit {
+  printf("=> Processing %s\n", $Foswiki::Contrib::VirtualHostingContrib::VirtualHost::CURRENT) if $verbose;
+  $Foswiki::engine->run();
+}
+
+__END__
+Foswiki - The Free and Open Source Wiki, http://foswiki.org/
+
+Copyright (C) 2008-2010 Foswiki Contributors. Foswiki Contributors
+are listed in the AUTHORS file in the root of this distribution.
+NOTE: Please extend that file, not this notice.
+
+Additional copyrights apply to some or all of the code in this
+file as follows:
+
+Copyright (C) 1999-2007 Peter Thoeny, peter@thoeny.org
+and TWiki Contributors. All Rights Reserved. TWiki Contributors
+are listed in the AUTHORS file in the root of this distribution.
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of the GNU General Public License
+as published by the Free Software Foundation; either version 2
+of the License, or (at your option) any later version. For
+more details read LICENSE in the root of this distribution.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+
+As per the GPL, removal of this notice is prohibited.
+

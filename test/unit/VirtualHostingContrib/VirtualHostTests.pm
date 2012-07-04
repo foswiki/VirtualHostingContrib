@@ -1,6 +1,7 @@
 package VirtualHostTests;
 
 use strict;
+use Error qw(:try);
 use Foswiki::Contrib::VirtualHostingContrib::VirtualHost;
 
 our $ROOT = '/tmp/foswiki-virtualhosts';
@@ -211,6 +212,49 @@ sub test_run_on_each {
   my @expected = ("$ROOT/colivre.coop.br/data", "$ROOT/example.com/data");
   $this->assert_deep_equals(\@expected, \@list, 'must run a block inside each virtual host')
 }
+
+sub test_run_on {
+  my $this = shift;
+  create_vhost('example.com');
+  my @list = ();
+  Foswiki::Contrib::VirtualHostingContrib::VirtualHost->run_on('example.com', sub {
+      push @list, $Foswiki::cfg{DataDir};
+    }
+  );
+  @list = sort @list;
+  my @expected = ("$ROOT/example.com/data");
+  $this->assert_deep_equals(\@expected, \@list, 'must run a block inside a virtual host')
+}
+
+sub test_run_on_alias {
+  my $this = shift;
+
+  create_vhost('example.com');
+  $Foswiki::cfg{VirtualHostingContrib}{ServerAlias}{'example'} = 'example.com';
+
+  my @list = ();
+  Foswiki::Contrib::VirtualHostingContrib::VirtualHost->run_on('example', sub {
+      push @list, $Foswiki::cfg{DataDir};
+    }
+  );
+
+  my $error;
+  try {
+    Foswiki::Contrib::VirtualHostingContrib::VirtualHost->run_on('unknown', sub {
+        push @list, $Foswiki::cfg{DataDir};
+      }
+    );
+  } catch Error::Simple with {
+    $error = shift;
+  };
+
+  $this->assert(defined($error));
+
+  @list = sort @list;
+  my @expected = ("$ROOT/example.com/data");
+  $this->assert_deep_equals(\@expected, \@list, 'must run a block inside a virtual host')
+}
+
 
 sub test_run_on_each_ignores_template {
   my $this = shift;

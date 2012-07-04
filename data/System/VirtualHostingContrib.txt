@@ -15,7 +15,7 @@ prefer.
 
 ---++ Overview
 
-VirtualHostingContrib provides the ability of using a single Foswiki
+!VirtualHostingContrib provides the ability of using a single Foswiki
 installation to serve differents sets of webs under different host names. Such
 different hostnames by which users access different content are known as
 _virtual hosts_.
@@ -31,7 +31,7 @@ Foswiki systems without having a linear increase in maintainance effort.
 
 ---++ Configuration
 
-VirtualHostingContrib works by providing an alternative entry point to the
+!VirtualHostingContrib works by providing an alternative entry point to the
 classic Foswiki scripts interface. To use it, you need to configure your
 webserver so that requests to e.g. =/foswiki/bin/view= are actually handled by
 the =/foswiki/bin/virtualhosts= CGI script. Such script will play the role of
@@ -46,11 +46,11 @@ TODO
 
 TODO
 
----+++ Using <nop/>FastCGI
+---+++ Using <nop>FastCGI
 
 The =virtualhosts= script is a regular CGI script, and as such it may exhibit
 poor performance in sites with low computing power or high usage, just like
-regular Foswiki. VirtualHostingContrib provides a !FastCGI version of the
+regular Foswiki. !VirtualHostingContrib provides a !FastCGI version of the
 script.
 
 To use it:
@@ -59,7 +59,7 @@ To use it:
      installed and properly working on your system.
    1 In your web server configuration, replace the references to the
      =foswiki.fcgi= script provided by !FastCGIEngineContrib with
-     =virtualhosts.fcgi= provided by VirtualHostingContrib.
+     =virtualhosts.fcgi= provided by !VirtualHostingContrib.
    1 Reload your web server configuration to apply the changes.
 
 ---++ Virtual hosts management
@@ -140,8 +140,8 @@ $Foswiki::cfg{AuthScripts} .= ',view';
 
 %RED% *Warning:* %ENDCOLOR% just like Foswiki's global configuration file
 =LocalSite.cfg=, virtual host configuration files are executed as Perl code.
-%So the system administrator must be completely sure of what to put in that
-%configuration file.
+So the system administrator must be completely sure of what to put in that
+configuration file.
 
 ---+++ Creating/removing/renaming virtual hosts
 
@@ -173,7 +173,7 @@ created later.
 If you have a text file called =_template.conf= in your virtual hosts
 directory, when you create a virtual host for example.com you'll also get a
 =example.com.conf= file which is just equal to the =_template.conf= file,
-except that all occurrences of =%<nop/>VIRTUALHOST%= will be replaced by the
+except that all occurrences of =%<nop>VIRTUALHOST%= will be replaced by the
 virtual host name (=example.com= in this example). __Note__ that
 !VirtualHostingContrib does not care about the contents of the file, it just
 takes the content of =_template.conf=, replaces all occurrences of
@@ -190,13 +190,63 @@ the case, change the configuration files accordingly.  Beware that after
 renaming a virtual host its data will _no longer_ be available at the old
 domain name.
 
+*To create an alias name for a virtual host*, add a name mapping to the 
+=ServeraAlias= hash of your global configuration in =LocalSite.cfg=. For
+instance use the following to access the =example.com= domain using the
+a different network interface as well:
+
+<verbatim>
+$Foswiki::cfg{VirtualHostingContrib}{ServerAlias} = {
+  '127.0.0.1' => 'example.com',
+</verbatim>
+
+Note that you also need to configure your http server to listen to
+the alias name to make use of this feature.
+
+%RED% *Warning:* %ENDCOLOR% in most cases where both domains, the canonical domain 
+and the alias one, are reachable on the same network interface it is preferable
+to use a http redirect from one domain to the other instead of creating another
+domain that basically serves the same content. Also, SSL certificates appear to
+be invalid when served from the wrong domain. Don't use server aliases for in
+that case. 
+
+Using a server alias does make sense when the same domain isn't
+reachable on a second network interface from where you'll only be able to
+reach the server using the alias name. This might also be the case when
+maintaining the site on a different server offline and syncing content later on
+to the machine that is able to serve the canonical domain.
+
 ---+++ Running command line tools against the virtual hosts
 
-TODO
+!VirtualHostingContrib comes with a set of tools to run specific tasks on the
+commandline, such as
+
+   * virtualhosts-mailnotify: a vhost-aware replacement for the standard mailnotify
+     script used in cronjobs to send out mail notifications
+   * virtualhosts-rest: call a rest handler for a specific virtual host on the commandline
+   * virtualhosts-tick-foswiki: a vhost-aware replacement for the standard tick-foswiki
+     maintenance script used in cronjobs
+   * virtualhost-view: render a page of a virtual host on the commandline
+
+These scripts are located in the =tools/= subdirectory of your Foswiki installation
+and can be called from the commandline. They all understand the usual parameters
+that their non-vhost-aware counterparts have. In addition, they all take an
+optional =host= parameter that lets you specify on which virtual host to run
+the command. When no host parameter is specified, the command will be run on
+all known virtual hosts known.
+
+For example, to run a REST handler =check= implemented by a !MyNewPlugin extension, use
+
+<verbatim>
+cd tools
+./virtualhosts-rest host=example.com /MyNewPlugin/check topic=Main.WebHome option=foo
+</verbatim>
+
+(TODO: virtualhosts-mailnotify doe not yet understand =host=).
 
 ---++ How it works
 
-This section describes the internals of VirtualHostingContrib, and is intended
+This section describes the internals of !VirtualHostingContrib, and is intended
 for developers and system administrators. If it's not your case, please feel
 free to skip it.
 
@@ -304,11 +354,11 @@ installed in your system).
 
 ---+++ Wrapping it up
 
-What VirtualHostingContrib does is to wrap the Foswiki::UI::handleRequest so
+What !VirtualHostingContrib does is to wrap the Foswiki::UI::handleRequest so
 that the configuration is tweaked just before actually handling the request,
 using the approach described above. The two extra CGI scripts provided are
 equal to the ones in Foswiki core and !FastCGIEngineContrib, but after loading
-Foswiki::UI, they load the VirtualHostingContrib module that does the wrapping
+Foswiki::UI, they load the !VirtualHostingContrib module that does the wrapping
 around Foswiki::UI::handleRequest.
 
 ---++ Info for developers
@@ -429,12 +479,13 @@ Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 |  Release: | %$RELEASE% |
 |  Version: | %$VERSION% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  04 Jul 2012: | added foswiki maintenance tools for virtual hosting; -- Foswiki:Main/MichaelDaum |
 |  20 Aug 2011: | added server aliases; fixed interfacing new logger api; added =run_on()= api; -- Foswiki:Main/MichaelDaum |
 |  02 Nov 2010(2): | code cleanup and performance optimization -- Foswiki:Main/AntonioTerceiro |
 |  02 Nov 2010:    | added support for listening on non-standard ports; performance optimization -- Foswiki:Main/AntonioTerceiro |
 |  16 Jul 2010:    | first release ([[Foswiki:Main/AntonioTerceiro][Antonio Terceiro]])  |
 |  Dependencies: | %$DEPENDENCIES% |
-|  Home page: | http://foswiki.org/bin/view/Extensions/VirtualHostingContrib |
-|  Support: | http://foswiki.org/bin/view/Support/VirtualHostingContrib |
+|  Home page: | Foswiki:Extensions/VirtualHostingContrib |
+|  Support: | Foswiki:Support/VirtualHostingContrib |
 
 <!-- Do _not_ attempt to edit this topic; it is auto-generated. -->

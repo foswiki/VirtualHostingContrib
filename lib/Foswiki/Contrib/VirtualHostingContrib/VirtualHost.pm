@@ -47,7 +47,6 @@ sub find {
       },
       Cache => {
         RootDir => $WorkingDir."/cache",
-        DBFile => $WorkingDir."/cache/foswiki_db",
       },
       RCS => {
         WorkAreaDir         => "$WorkingDir/work_areas",
@@ -114,14 +113,10 @@ sub run_on_each {
 sub run_on {
   my ($class, $hostname, $code) = @_;
 
-  my %hostnames =
-    map { $_ => 1 }
-    grep { $class->exists($_) && $_ ne '_template' }
-    map { basename $_} glob($Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . '/*');
-
-  die "ERROR: unknown virtual host $hostname" unless defined $hostnames{$hostname};
-
   my $virtual_host = $class->find($hostname);
+
+  die "ERROR: unknown virtual host $hostname" unless defined $virtual_host;
+
   $virtual_host->run($code);
 }
 
