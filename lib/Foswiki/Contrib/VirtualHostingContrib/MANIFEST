@@ -10,7 +10,11 @@ bin/virtualhosts.fcgi 0755 FastCGI script
 tools/virtualhosts-lighttpd.pl 0755 Development server script
 tools/virtualhosts-create.sh 0755 Utility script
 tools/virtualhosts-mailnotify 0755 Utility script
+tools/virtualhosts-statistics 0755 Utility script
 tools/virtualhosts-rest 0755 Utility script
 tools/virtualhosts-tick-foswiki 0755 Utility script
 tools/virtualhosts-view 0755 Utility script
+tools/virtualhosts-jsonrpc 0755 Utility script
+tools/virtualhosts-convert-charset 0755 Utility script
+tools/virtualhosts-statistics 0755 Utility script
 pub/System/VirtualHostingContrib/logo-colivre.png 0644 Sponsor logo
