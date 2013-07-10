@@ -1,3 +1,4 @@
+%META:TOPICINFO{author="BaseUserMapping_999" comment="autosave" date="1356278806" format="1.1" version="1"}%
 ---+!! !VirtualHostingContrib
 <!--
 One line description, required for extensions repository catalog.
@@ -75,6 +76,7 @@ configuration interface:
 | *Setting* | *Meaning* | *Default value* |
 | =VirtualHostsDir= | The directory in which you virtual hosts are stored | =$Foswiki::cfg{DataDir}/../virtualhosts= |
 | =ServerAlias= | a mapping of aliases to real hostnames | |
+| =DisabledServers= | a list of servers that are disabled temporarily even though there's a valid environment present in =VirtualHostsDir= |
 
 ---+++ The structure of a virtualhost
 
@@ -143,7 +145,7 @@ $Foswiki::cfg{AuthScripts} .= ',view';
 So the system administrator must be completely sure of what to put in that
 configuration file.
 
----+++ Creating/removing/renaming virtual hosts
+---+++ Creating/disabling/removing/renaming virtual hosts
 
 *To create a virtual host*, you can use the provided script at
 =tools/virtualhosts-create.sh=. To create a virtual host for the example.com
@@ -178,6 +180,11 @@ virtual host name (=example.com= in this example). __Note__ that
 !VirtualHostingContrib does not care about the contents of the file, it just
 takes the content of =_template.conf=, replaces all occurrences of
 %VIRTUALHOST% by the virtual host name, and that's it.
+
+*To disable a virtual host*, add it to the list of =DisabledServers=. This
+is a comma-separated list of those hosts that are temporarily inactive and won't
+be served anymore until you either remove it from the =DisabledServers=
+list again or remove the files of the virtual host permanently.
 
 *To remove a virtual host*, just remove the its files.  If you are removing the
 virtual host for =example.com=, and your virtual hosts are stored in
@@ -223,10 +230,14 @@ commandline, such as
 
    * virtualhosts-mailnotify: a vhost-aware replacement for the standard mailnotify
      script used in cronjobs to send out mail notifications
+   * virtualhost-statistics: a vhost-aware replacement for the standard statistics
+     script used in cronjobs to update the WebStatistics files in each web
    * virtualhosts-rest: call a rest handler for a specific virtual host on the commandline
    * virtualhosts-tick-foswiki: a vhost-aware replacement for the standard tick-foswiki
      maintenance script used in cronjobs
-   * virtualhost-view: render a page of a virtual host on the commandline
+   * virtualhosts-view: render a page of a virtual host on the commandline
+   * virtualhosts-jsonrpc: a vhost-aware commandline tool for the JSON-RPC interface of 
+     [[Foswiki:Extensions/JsonRpcContrib][JsonRpcContrib]]
 
 These scripts are located in the =tools/= subdirectory of your Foswiki installation
 and can be called from the commandline. They all understand the usual parameters
@@ -473,12 +484,14 @@ $ perl test.pl
 
 Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 
-|  Author(s): | [[Foswiki:Main/AntonioTerceiro][Antonio Terceiro]], [[Foswiki:Main/JoenioCosta][Joenio Costa]] |
+|  Author(s): | [[Foswiki:Main/AntonioTerceiro][Antonio Terceiro]], [[Foswiki:Main/JoenioCosta][Joenio Costa]], [[Foswiki:Main/MichaelDaum][Michael Daum]] |
 |  Copyright: | &copy; 2010 [[http://www.colivre.coop.br/][Colivre]] |
 |  License: | [[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]] |
 |  Release: | %$RELEASE% |
 |  Version: | %$VERSION% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  10 Jul 2013: | added feature to temporarily disable virtual hosts; -- Foswiki:Main/MichaelDaum |
+|  01 Jul 2013: | added support for !WebStatistics and a couple of other commandline tools |
 |  04 Jul 2012: | added foswiki maintenance tools for virtual hosting; -- Foswiki:Main/MichaelDaum |
 |  20 Aug 2011: | added server aliases; fixed interfacing new logger api; added =run_on()= api; -- Foswiki:Main/MichaelDaum |
 |  02 Nov 2010(2): | code cleanup and performance optimization -- Foswiki:Main/AntonioTerceiro |

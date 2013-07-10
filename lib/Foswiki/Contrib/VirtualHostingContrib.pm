@@ -15,23 +15,8 @@ package Foswiki::Contrib::VirtualHostingContrib;
 
 use strict;
 
-# $VERSION is referred to by Foswiki, and is the only global variable that
-# *must* exist in this package. This should always be in the format
-# $Rev: 3193 $ so that Foswiki can determine the checked-in status of the
-# extension.
-our $VERSION = '$Rev$'; # version of *this file*.
-
-# $RELEASE is used in the "Find More Extensions" automation in configure.
-# It is a manually maintained string used to identify functionality steps.
-# You can use any of the following formats:
-# tuple   - a sequence of integers separated by . e.g. 1.2.3. The numbers
-#           usually refer to major.minor.patch release or similar. You can
-#           use as many numbers as you like e.g. '1' or '1.2.3.4.5'.
-# isodate - a date in ISO8601 format e.g. 2009-08-07
-# date    - a date in 1 Jun 2009 format. Three letter English month names only.
-# Note: it's important that this string is exactly the same in the extension
-# topic - if you use %$RELEASE% with BuildContrib this is done automatically.
-our $RELEASE = '1.0.0';
+use version; our $VERSION = version->declare("v1.1.0");
+our $RELEASE = '10 Jul 2013';
 
 our $SHORTDESCRIPTION = 'Adds virtual hosting support for Foswiki.';
 
@@ -99,7 +84,6 @@ __DATA__
     </style>
   </head>
   <body>
-    <img src="$logo" alt="Foswiki - VirtualHostingContrib" title="Foswiki - VirtualHostingContrib"/>
     <h1>Nothing to see here</h1>
     <blockquote>
       <p>

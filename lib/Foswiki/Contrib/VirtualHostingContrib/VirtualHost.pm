@@ -16,16 +16,16 @@ BEGIN {
 sub find {
   my ($class, $hostname, $port) = @_;
   $hostname = _validate_hostname($hostname);
-  if (!$hostname) {
-    return undef;
-  }
+  return unless $hostname;
 
   # check whether the given virtual host directory exists or not
   if (!$class->exists($hostname)) {
 
     $hostname = $Foswiki::cfg{VirtualHostingContrib}{ServerAlias}{$hostname};
-    return undef unless defined $hostname;
+    return unless defined $hostname;
   }
+
+  return unless $class->enabled($hostname);
 
   my $DataDir         = $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . "/$hostname/data";
   my $WorkingDir      = $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . "/$hostname/working";
@@ -73,6 +73,16 @@ sub exists {
   return -d $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . "/$hostname/data"
 }
 
+sub enabled {
+  my ($class, $hostname) = @_;
+
+  unless (defined $class->{disabledServers}) {
+    %{$class->{disabledServers}} = map {$_ => 1} split(/\s*,\s*/, $Foswiki::cfg{VirtualHostingContrib}{DisabledServers} || '');
+  }
+
+  return ! defined $class->{disabledServers}{$hostname};
+}
+
 sub run {
   my ($self, $code) = @_;
 
@@ -101,11 +111,11 @@ sub _merge_config {
 sub run_on_each {
   my ($class, $code) = @_;
   my @hostnames = map { basename $_} glob($Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . '/*');
-  @hostnames = grep { $class->exists($_) && $_ ne '_template' } @hostnames;
+  @hostnames = grep { $class->exists($_) && $_ !~ /^_/ } @hostnames;
 
   for my $hostname (@hostnames) {
     my $virtual_host = $class->find($hostname);
-    $virtual_host->run($code);
+    $virtual_host->run($code) if defined $virtual_host;
   }
 }
 

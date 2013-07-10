@@ -17,6 +17,8 @@ sub set_up {
   my $this = shift;
 
   $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} = $ROOT;
+  $Foswiki::cfg{VirtualHostingContrib}{DisabledServers} = 'disabled1.com, disabled2.com';
+
   mkdir($ROOT);
 
   $this->SUPER::set_up();
@@ -91,6 +93,23 @@ sub test_unexisting_vhost {
   my $this = shift;
   my $vhost = Foswiki::Contrib::VirtualHostingContrib::VirtualHost->find('unexisting.com');
   $this->assert(!$vhost, "searching for an unexisting virtualhost must return nothing");
+}
+
+sub test_disabled_vhost {
+  my $this = shift;
+
+  create_vhost('disabled1.com');
+  create_vhost('disabled2.com');
+  create_vhost('enabled.com');
+
+  my $vhost = Foswiki::Contrib::VirtualHostingContrib::VirtualHost->find('disabled1.com');
+  $this->assert(!$vhost, "searching for a disabled virtualhost must return nothing");
+
+  $vhost = Foswiki::Contrib::VirtualHostingContrib::VirtualHost->find('disabled2.com');
+  $this->assert(!$vhost, "searching for a disabled virtualhost must return nothing");
+
+  $vhost = Foswiki::Contrib::VirtualHostingContrib::VirtualHost->find('enabled.com');
+  $this->assert($vhost, "searching for an enabled virtualhost must return something");
 }
 
 sub test_find_with_invalid_hostname {
