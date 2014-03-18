@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="BaseUserMapping_999" comment="autosave" date="1356278806" format="1.1" version="1"}%
+%META:TOPICINFO{author="ProjectContributor" comment="autosave" date="1356278806" format="1.1" version="1"}%
 ---+!! !VirtualHostingContrib
 <!--
 One line description, required for extensions repository catalog.
@@ -490,6 +490,7 @@ Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 |  Release: | %$RELEASE% |
 |  Version: | %$VERSION% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  18 Mar 2014: | exclude server aliases running a command on all hosts; added =quiet= commandline parameter |
 |  10 Jul 2013: | added feature to temporarily disable virtual hosts; -- Foswiki:Main/MichaelDaum |
 |  01 Jul 2013: | added support for !WebStatistics and a couple of other commandline tools |
 |  04 Jul 2012: | added foswiki maintenance tools for virtual hosting; -- Foswiki:Main/MichaelDaum |

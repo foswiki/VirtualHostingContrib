@@ -14,9 +14,10 @@
 package Foswiki::Contrib::VirtualHostingContrib;
 
 use strict;
+use warnings;
 
-use version; our $VERSION = version->declare("v1.1.0");
-our $RELEASE = '10 Jul 2013';
+our $VERSION = '1.11';
+our $RELEASE = '1.11';
 
 our $SHORTDESCRIPTION = 'Adds virtual hosting support for Foswiki.';
 

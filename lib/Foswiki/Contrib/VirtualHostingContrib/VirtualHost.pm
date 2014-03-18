@@ -70,7 +70,7 @@ sub hostname {
 
 sub exists {
   my ($class, $hostname) = @_;
-  return -d $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . "/$hostname/data"
+  return -d $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . "/$hostname/data";
 }
 
 sub enabled {
@@ -110,8 +110,10 @@ sub _merge_config {
 # StaticMethod
 sub run_on_each {
   my ($class, $code) = @_;
-  my @hostnames = map { basename $_} glob($Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . '/*');
-  @hostnames = grep { $class->exists($_) && $_ !~ /^_/ } @hostnames;
+
+  my @hostnames =
+    grep { $class->exists($_) && $_ !~ /^_/ && !defined($Foswiki::cfg{VirtualHostingContrib}{ServerAlias}{$_}) }
+    map { basename $_} glob($Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . '/*');
 
   for my $hostname (@hostnames) {
     my $virtual_host = $class->find($hostname);
