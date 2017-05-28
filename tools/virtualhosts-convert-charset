@@ -16,7 +16,7 @@ BEGIN {
 use Foswiki ();
 use Foswiki::UI ();
 use Foswiki::Contrib::VirtualHostingContrib::VirtualHost ();
-use Foswiki::Contrib::CharsetConvertorContrib ();
+use Foswiki::Contrib::CharsetConverterContrib ();
 
 # Parse command-line arguments
 my %args;
@@ -37,6 +37,9 @@ if ($hostname) {
 }
 
 sub doit {
+
+  my $hostname = shift;
+  print "\n=========================\nRUNNING ON $hostname\n=========================\n";
 
   unless ($args{-i}) {
     local $/ = undef;
@@ -79,7 +82,7 @@ INFORM
 	ask( "\$Foswiki::cfg{Site}{CharSet} is set to '$Foswiki::cfg{Site}{CharSet}'. Is that correct for the data in your Foswiki database" );
   }
 
-  Foswiki::Contrib::CharsetConvertorContrib::convertCollection('', %args);
+  Foswiki::Contrib::CharsetConverterContrib::convert_database(%args);
 }
 
 # Prompt user for a confirmation
@@ -101,7 +104,7 @@ sub ask {
 1;
 
 __END__
-Copyright (C) 2011 Foswiki Contributors.
+Copyright (C) 2011-2017 Foswiki Contributors.
 
 Author: Crawford Currie http://c-dot.co.uk
 
