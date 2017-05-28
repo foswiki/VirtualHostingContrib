@@ -1,19 +1,20 @@
-# Release manifest for VirtualHostingContrib
-data/System/VirtualHostingContrib.txt 0644 Documentation
-lib/Foswiki/Contrib/VirtualHostingContrib.pm 0644 Perl module
-lib/Foswiki/Contrib/VirtualHostingContrib/VirtualHost.pm 0644 Perl module
-lib/Foswiki/Contrib/VirtualHostingContrib/Config.spec 0644 Configuration template
-test/unit/VirtualHostingContrib/VirtualHostingContribSuite.pm 0644 Perl test file
-test/unit/VirtualHostingContrib/VirtualHostTests.pm 0644 Perl test file
-bin/virtualhosts 0755 CGI script
-bin/virtualhosts.fcgi 0755 FastCGI script
-tools/virtualhosts-lighttpd.pl 0755 Development server script
-tools/virtualhosts-create.sh 0755 Utility script
-tools/virtualhosts-mailnotify 0755 Utility script
-tools/virtualhosts-rest 0755 Utility script
-tools/virtualhosts-tick-foswiki 0755 Utility script
-tools/virtualhosts-view 0755 Utility script
-tools/virtualhosts-jsonrpc 0755 Utility script
-tools/virtualhosts-convert-charset 0755 Utility script
-tools/virtualhosts-statistics 0755 Utility script
-pub/System/VirtualHostingContrib/logo-colivre.png 0644 Sponsor logo
+bin/virtualhosts 0775
+bin/virtualhosts.fcgi 0775
+data/System/VirtualHostingContrib.txt 0664
+lib/Foswiki/Configure/Checkers/VirtualHostingContrib/VirtualHostsDir.pm 0775
+lib/Foswiki/Configure/Wizards/CreateVHost.pm 0664
+lib/Foswiki/Contrib/VirtualHostingContrib.pm 0664
+lib/Foswiki/Contrib/VirtualHostingContrib/Config.spec 0664
+lib/Foswiki/Contrib/VirtualHostingContrib/DEPENDENCIES 0664
+lib/Foswiki/Contrib/VirtualHostingContrib/VirtualHost.pm 0664
+pub/System/VirtualHostingContrib/logo-colivre.png 0664
+tools/virtualhosts-convert-charset 0775
+tools/virtualhosts-create.sh 0775
+tools/virtualhosts-jsonrpc 0775
+tools/virtualhosts-lighttpd.pl 0775
+tools/virtualhosts-mailnotify 0775
+tools/virtualhosts-rest 0775
+tools/virtualhosts-statistics 0775
+tools/virtualhosts-tick-foswiki 0775
+tools/virtualhosts-view 0775
+tools/virtualhosts-convertTopicSettings 0775
