@@ -13,29 +13,34 @@ use Foswiki::Configure::FileUtil ();
 sub check_current_value {
     my ( $this, $reporter ) = @_;
 
-    my $d = $this->checkExpandedValue($reporter);
-    return unless defined $d;
+    my $d = $Foswiki::cfg{VirtualHostingContrib::VirtualHostsDir};
+
+    unless ( defined $d ) {
+        $d = Cwd::abs_path( $Foswiki::cfg{DataDir} . '/../virtualhosts' );
+        $d =~ /(.*)$/;
+        $d = $1;    # untaint, we trust Foswiki configuration
+        $reporter->NOTE("Default path =$d= will be used.");
+    }
 
     if ( -d $d ) {
         my $path   = $d . '/' . time;
         my $report = Foswiki::Configure::FileUtil::checkCanCreateFile($path);
         if ($report) {
-            $reporter->ERROR("Cannot write to this directory");
+            $reporter->ERROR("Cannot write to $d");
         }
     }
     elsif ( -e $d ) {
-        $reporter->ERROR("Exists, but is not a directory");
+        $reporter->ERROR("$d Exists, but is not a directory");
     }
     else {
-        $reporter->WARN(
-            "Does not exist.");
+        $reporter->WARN("$d Does not exist.");
         return;
     }
 
     my @list;
     my $dh;
 
-    if ( opendir( $dh, $d  ) ) {
+    if ( opendir( $dh, $d ) ) {
         @list = map {
 
             # Tradeoff: correct validation of every web name, which allows
@@ -53,25 +58,34 @@ sub check_current_value {
           grep { !/^\./ } readdir($dh);
         closedir($dh);
     }
-    my $nhost=0;
+    my $nhost = 0;
     if ( scalar @list ) {
-        $reporter->NOTE(" *Virtual Hosts:* ");
+        $reporter->NOTE("\n *Virtual Hosts:* ");
         foreach my $host ( sort @list ) {
-            next if ( substr($host,1,1) eq '_' );
-            $reporter->NOTE("   * $host " . ( ( $Foswiki::cfg{VirtualHostingContrib}{DisabledServers} =~ m/\b$host\b/ ) ? " *disabled* " : '' ) );
+            next if ( substr( $host, 1, 1 ) eq '_' );
+            $reporter->NOTE(
+                "   * $host "
+                  . (
+                    (
+                        $Foswiki::cfg{VirtualHostingContrib}{DisabledServers}
+                          =~ m/\b$host\b/
+                    ) ? " *disabled* " : ''
+                  )
+            );
             $nhost++;
         }
         $reporter->NOTE("   * *No Virtual Hosts defined* ") unless $nhost;
 
         $reporter->NOTE(" *Template Hosts:* ");
-        $nhost=0;
+        $nhost = 0;
         foreach my $host ( sort @list ) {
-            next unless ( substr($host,1,1) eq '_' );
+            next unless ( substr( $host, 1, 1 ) eq '_' );
             $reporter->NOTE("   * $host ");
             $nhost++;
         }
-       $reporter->NOTE("<br/>&nbsp;&nbsp;No Template Hosts defined") unless $nhost;
-   }
+        $reporter->NOTE("<br/>&nbsp;&nbsp;No Template Hosts defined")
+          unless $nhost;
+    }
 }
 
 1;
