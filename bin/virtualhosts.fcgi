@@ -1,7 +1,7 @@
-#!/usr/bin/perl -wT
+#!/usr/bin/env perl
 # Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# Copyright (C) 2008 Gilmar Santos Jr, jgasjr@gmail.com and Foswiki
+# Copyright (C) 2008-2017 Gilmar Santos Jr, jgasjr@gmail.com and Foswiki
 # contributors. Foswiki contributors are listed in the AUTHORS file in the root
 # of Foswiki distribution.
 #
@@ -40,21 +40,18 @@ use Foswiki::UI;
 use Foswiki::Contrib::VirtualHostingContrib;
 use Cwd;
 
-use Error;
-$Error::Debug = 1;
-
 our ($script) = $0         =~ /^(.*)$/;
 our ($dir)    = Cwd::cwd() =~ /^(.*)$/;
 
-eval { eval substr( $0, 0, 0 ) };
-Foswiki::Engine::FastCGI::reExec() unless $@ =~ /^Insecure dependency in eval/;
-
 my @argv = @ARGV;
 
-my ( $listen, $nproc, $pidfile, $manager, $detach, $help, $quiet );
+my ( $listen, $nproc, $max, $size, $check, $pidfile, $manager, $detach, $help, $quiet );
 GetOptions(
     'listen|l=s'  => \$listen,
     'nproc|n=i'   => \$nproc,
+    'max|x=i'     => \$max,
+    'check|c=i'   => \$check,
+    'size|s=i'    => \$size,
     'pidfile|p=s' => \$pidfile,
     'manager|M=s' => \$manager,
     'daemon|d'    => \$detach,
@@ -63,6 +60,11 @@ GetOptions(
 );
 
 pod2usage(1) if $help;
+
+# untaint
+if (defined $pidfile) {
+  $pidfile =~ /^(.*)$/ and $pidfile = $1;
+}
 
 @ARGV = @argv;
 undef @argv;
@@ -75,6 +77,9 @@ $Foswiki::engine->run(
         manager => $manager,
         detach  => $detach,
         quiet   => $quiet,
+        max     => $max,
+        size    => $size,
+        check   => $check,
     }
 );
 
@@ -89,6 +94,9 @@ foswiki.fcgi [options]
     -n --nproc      Number of backends to use, defaults to 1
     -p --pidfile    File used to write pid to
     -M --manager    FCGI manager class
+    -x --max        Maximum requests served per server instance
+    -c --check      Number of requests when to check the size of the server
+    -s --size       Maximum memory size of a server before being recycled
     -d --daemon     Detach from terminal and keeps running as a daemon
     -q --quiet      Disable notification messages
     -? --help       Display this help and exits
