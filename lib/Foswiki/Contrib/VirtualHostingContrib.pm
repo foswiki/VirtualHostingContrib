@@ -24,37 +24,37 @@ our $SHORTDESCRIPTION = 'Adds virtual hosting support for Foswiki.';
 use Foswiki::Contrib::VirtualHostingContrib::VirtualHost;
 
 BEGIN {
-  no warnings 'redefine';
+    no warnings 'redefine';
 
-  *Foswiki::UI::handleRequest_implementation = \&Foswiki::UI::handleRequest;
+    *Foswiki::UI::handleRequest_implementation = \&Foswiki::UI::handleRequest;
 
-  *Foswiki::UI::handleRequest = sub {
-    my ($req) = shift;
+    *Foswiki::UI::handleRequest = sub {
+        my ($req) = shift;
 
-    my $virtual_host = Foswiki::Contrib::VirtualHostingContrib::VirtualHost->find($req->virtual_host(), $req->virtual_port());
+        my $virtual_host =
+          Foswiki::Contrib::VirtualHostingContrib::VirtualHost->find(
+            $req->virtual_host(), $req->virtual_port() );
 
-    if ($virtual_host) {
-      # change the process name during the request
-      local $0 = sprintf("foswiki-virtualhost[%s%s]", $virtual_host->hostname(), $req->uri());
+        if ($virtual_host) {
 
-      # serve under the virtual host
-      $virtual_host->run(sub { Foswiki::UI::handleRequest_implementation($req); });
-    } else {
-      # no virtual host: bail out
-      my $res = new Foswiki::Response;
-      $res->status(501); # 501 Not Implemented
-      $res->header(-type => 'text/html', -charset => 'utf-8');
-      while (<DATA>) {
-        s/\$hostname/$req->virtual_host()/ge;
-        s/\$logo/$Foswiki::cfg{PubUrlPath}\/System\/ProjectLogos\/foswiki-logo.png/g;
-        $res->print($_);
-      }
-      return $res;
-    }
-  }
-}
+            # change the process name during the request
+            local $0 = sprintf(
+                "foswiki-virtualhost[%s%s]",
+                $virtual_host->hostname(),
+                $req->uri()
+            );
 
-__DATA__
+            # serve under the virtual host
+            $virtual_host->run(
+                sub { Foswiki::UI::handleRequest_implementation($req); } );
+        }
+        else {
+            # no virtual host: bail out
+            my $res = new Foswiki::Response;
+            $res->status(500);    # 500 - Virtual Host not found
+            $res->header( -type => 'text/html', -charset => 'utf-8' );
+
+            my $errmsg = <<'MORE';
 <!DOCTYPE html>
 <html>
   <head>
@@ -103,3 +103,14 @@ __DATA__
     </blockquote>
   </body>
 </html>
+MORE
+
+            $errmsg =~ s/\$hostname/$req->virtual_host()/ge;
+            $errmsg =~
+s/\$logo/$Foswiki::cfg{PubUrlPath}\/System\/ProjectLogos\/foswiki-logo.png/g;
+            $res->print($errmsg);
+
+            return $res;
+        }
+      }
+}
