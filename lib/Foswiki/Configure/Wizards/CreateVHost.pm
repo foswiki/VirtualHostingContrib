@@ -83,7 +83,7 @@ sub create_vhost_1 {
     $reporter->NOTE($form);
     my %data = (
         wizard => 'CreateVHost',
-        method => 'create_vhost_2',
+        method => 'run_create',
         form   => '#create_vhost',
         args   => {
 
@@ -100,7 +100,7 @@ sub create_vhost_1 {
 
 =cut
 
-sub create_vhost_2 {
+sub run_create {
     my ( $this, $reporter ) = @_;
 
     my $args = $this->param('args');
@@ -143,6 +143,16 @@ sub _create_vhost {
             $reporter->ERROR(
                 "Virtual host $vhost exists as a file. Unable to create.");
         }
+        return 0;
+    }
+
+    # Validate input
+    if ( $template && ! -d "$vdir/$template" ) {
+        $reporter->ERROR("Requested template host =$template= does not exist in =$vdir=!");
+        return 0;
+    }
+    if ( $cfgtemplate && ! -f "$vdir/$cfgtemplate" ) {
+        $reporter->ERROR("Requested template configuration =$cfgtemplate= does not exist in =$vdir=!");
         return 0;
     }
 

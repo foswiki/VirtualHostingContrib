@@ -213,6 +213,22 @@ the master site's configured names, then a custom =virtualhost.conf= *must* be
 used.
 </div>
 
+---++++ Running the wizard with =tools/configure=
+
+The =CreateVHost= wizard can be run from the CLI as well.   The arguments are:
+
+| *Parameter* | *Description* | *default* | *Example* |
+| =name= | virtual hostname to create | (required) | =-args name=foo.mysite.com= |
+| =createpasswd= | Create the =.htpasswd= file. | no password file created | =-args createpasswd=1= |
+| =template= | Template host to copy | host will be copied from master webs | =-args template=_templateweb= |
+| =templatecfg= | Template file to copy into configuration | no config created | =-args templatecfg=_template.conf= |
+
+*Caution:* Always run this wizard using the web server's userid
+<verbatim>
+sudo -u www-data tools/configure -wizard CreateVHost -method create_vhost_2 -args name=foo.site.com -args createpasswd=1
+sudo -u www-data tools/configure -wizard CreateVHost -method create_vhost_2 -args name=foo2.site.com -args template=_template templatecfg=_template.conf
+</verbatim>
+
 
 ---++++ Managing virtual hosts
 
