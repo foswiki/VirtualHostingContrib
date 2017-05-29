@@ -38,11 +38,49 @@ virtual host to be created.
 sub create_vhost_1 {
     my ( $this, $reporter ) = @_;
 
+    my $vdir = $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir};
+    unless ($vdir) {
+        $vdir = Cwd::abs_path( $Foswiki::cfg{DataDir} . '/../virtualhosts' );
+        $vdir =~ /(.*)$/;
+        $vdir = $1;    # untaint, we trust Foswiki configuration
+    }
+
+    my @templates;
+    if ( opendir( my $dh, $vdir ) ) {
+        @templates = map { Foswiki::Sandbox::untaintUnchecked($_) }
+          grep { /^_/ } readdir($dh);
+        closedir($dh);
+    }
+
+    my $form =
+        '<form id="create_vhost">'
+      . 'vhost name: '
+      . '<input type="text" length="30" name="name"></input></br/>';
+    $form .= 'Host Template name: <select name="template"> '
+      . '<option selected value="-none-">-none-</option>';
+    if ( scalar @templates ) {
+        foreach my $template ( sort @templates ) {
+            next unless ( -d "$vdir/$template" );
+            $form .= "<option value='$template'>$template</option>";
+        }
+    }
+    $form .= '</select><br/>';
+    $form .= 'Config Template name: <select name="cfgtemplate"> '
+      . '<option selected value="-none-">-none-</option>';
+    if ( scalar @templates ) {
+        foreach my $template ( sort @templates ) {
+            next unless ( -f "$vdir/$template" );
+            $form .= "<option value='$template'>$template</option>";
+        }
+    }
+    $form .= '</select><br/>';
+
+    $form .=
+"Create .htpasswd file: <input type='checkbox' name='createpasswd' checked> (registration disabled if unchecked)<br/>";
+    $form .= '</form>';
+
     $reporter->NOTE("---+ Create Virtual Host");
-    $reporter->NOTE( '<form id="create_vhost">'
-          . 'vhost name: '
-          . '<input type="text" length="30" name="name"></input></br/>'
-          . '</form>' );
+    $reporter->NOTE($form);
     my %data = (
         wizard => 'CreateVHost',
         method => 'create_vhost_2',
@@ -74,7 +112,7 @@ sub create_vhost_2 {
 
     $this->_create_vhost($reporter);
 
-    $reporter->NOTE("Done");
+    $reporter->NOTE("\nDone");
     return undef;
 }
 
@@ -91,7 +129,9 @@ sub _create_vhost {
     }
 
     $args->{vdir} = $vdir;
-    my $vhost = $args->{name};
+    my $vhost       = $args->{name};
+    my $template    = $args->{template};
+    my $cfgtemplate = $args->{cfgtemplate};
 
     $reporter->ERROR("virtual host directory is missing") unless ( -e $vdir );
 
@@ -106,12 +146,25 @@ sub _create_vhost {
         return 0;
     }
 
-    if ( -d "$vdir/_template" ) {
+    if ( $template && -d "$vdir/$template" ) {
         $this->_createFromTemplate($reporter);
-        $this->_createConfigFile($reporter);
     }
     else {
         $this->_createFromScratch($reporter);
+    }
+
+    if ( $cfgtemplate && -f "$vdir/$cfgtemplate" ) {
+        $this->_createConfigFile($reporter);
+    }
+
+    if ( $args->{createpasswd} ) {
+        _create_htpasswd( $reporter,
+            "$args->{vdir}/$args->{name}/data/.htpasswd" );
+    }
+
+    unless ( -e "$args->{vdir}/$args->{name}/data/.htpasswd" ) {
+        $reporter->WARN(
+            "No =.htpasswd= file exists. Registration id disabled.");
     }
 
     $this->_setPermissions($reporter);
@@ -123,10 +176,12 @@ sub _createFromTemplate {
     my $args     = $this->param('args');
 
     my ( $num_of_files_and_dirs, $num_of_dirs, $depth_traversed ) =
-      dircopy( "$args->{vdir}/_template", "$args->{vdir}/$args->{name}" );
+      dircopy( "$args->{vdir}/$args->{template}",
+        "$args->{vdir}/$args->{name}" );
 
+    $reporter->NOTE("   * Created =$args->{name}=.");
     $reporter->NOTE(
-"Created $args->{name}. copied: $num_of_files_and_dirs files and directories from _template."
+"   * copied: $num_of_files_and_dirs files and directories from =$args->{template}=."
     );
 
     return;
@@ -137,11 +192,12 @@ sub _createConfigFile {
     my $reporter = shift;
     my $args     = $this->param('args');
 
-    if ( -e "$args->{vdir}/_template.conf" ) {
-        my $cfg = _readFile("$args->{vdir}/_template.conf");
+    if ( -f "$args->{vdir}/$args->{cfgtemplate}" ) {
+        my $cfg = _readFile("$args->{vdir}/$args->{cfgtemplate}");
         $cfg =~ s/%VIRTUALHOST%/$args->{name}/g;
         _saveFile( "$args->{vdir}/$args->{name}/$args->{name}.conf", $cfg );
-        $reporter->NOTE("Saved $args->{vdir}/$args->{name}/$args->{name}.conf");
+        $reporter->NOTE(
+            "   * Saved =$args->{vdir}/$args->{name}/$args->{name}.conf=");
     }
     return;
 }
@@ -151,7 +207,8 @@ sub _createFromScratch {
     my $reporter = shift;
     my $args     = $this->param('args');
 
-    $reporter->NOTE("Create for $args->{name} in vdir $args->{vdir}");
+    $reporter->NOTE(
+        "   * Create for =$args->{name}= in directory =$args->{vdir}=");
 
     File::Path::make_path("$args->{vdir}/$args->{name}/data");
     _symlink_or_copy(
@@ -160,11 +217,11 @@ sub _createFromScratch {
     );
     File::Path::make_path("$args->{vdir}/$args->{name}/pub");
 
-    $this->_copy_web('Main');
-    $this->_copy_web('Sandbox');
-    $this->_copy_web('Trash');
+    $this->_copy_web( $Foswiki::cfg{UsersWebName} );
+    $this->_copy_web( $Foswiki::cfg{SandboxWebName} );
+    $this->_copy_web( $Foswiki::cfg{TrashWebName} );
 
-    $this->_link_web('System');
+    $this->_link_web( $Foswiki::cfg{SystemWebName} );
     $this->_link_web('_default');
     $this->_link_web('_empty');
 
@@ -174,8 +231,6 @@ sub _createFromScratch {
         "$args->{vdir}/$args->{name}/working/registration_approvals");
     File::Path::make_path("$args->{vdir}/$args->{name}/working/logs");
     File::Path::make_path("$args->{vdir}/$args->{name}/templates");
-
-    _create_htpasswd( $reporter, "$args->{vdir}/$args->{name}/data/.htpasswd" );
 
     return;
 }
@@ -258,11 +313,13 @@ sub _create_htpasswd {
             "Password file $f does not exist and could not be created: $!");
     }
     else {
-        $reporter->NOTE("A new password file $f has been created.");
+        $reporter->NOTE("   * A new password file =$f= has been created.");
+    }
+
+    if ( -e $f ) {
         unless ( chmod( 0600, $f ) ) {
             $reporter->WARN(
-                "Permissions could not be changed on the new password file $f"
-            );
+                "Permissions could not be changed on the password file =$f=" );
         }
     }
 }

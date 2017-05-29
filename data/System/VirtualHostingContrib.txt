@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="ProjectContributor" comment="autosave" date="1356278806" format="1.1" version="1"}%
+%META:TOPICINFO{author="ProjectContributor" date="1496073590" format="1.1" version="1"}%
 ---+!! !VirtualHostingContrib
 <!--
 One line description, required for extensions repository catalog.
@@ -56,11 +56,10 @@ script.
 
 To use it:
 
-   1 Make sure you have [[Foswiki:Extensions/FastCGIEngineContrib][FastCGIEngineContrib]]
-     installed and properly working on your system.
-   1 In your web server configuration, replace the references to the
-     =foswiki.fcgi= script provided by !FastCGIEngineContrib with
-     =virtualhosts.fcgi= provided by !VirtualHostingContrib.
+   1 Make sure you have [[Foswiki:Extensions/FastCGIEngineContrib][FastCGIEngineContrib]] installed and properly working on your system.
+   1 In your web server configuration for the virtual sites, replace the references to the
+     =foswiki.fcgi= script provided by !FastCGIEngineContrib with =virtualhosts.fcgi= provided by !VirtualHostingContrib.
+      * You will still need a conventional configuration for the _base_ site for access to conigure.
    1 Reload your web server configuration to apply the changes.
 
 ---++ Virtual hosts management
@@ -74,7 +73,7 @@ The following settings are available for this contrib in the Foswiki
 configuration interface:
 
 | *Setting* | *Meaning* | *Default value* |
-| =VirtualHostsDir= | The directory in which you virtual hosts are stored | =$Foswiki::cfg{DataDir}/../virtualhosts= |
+| =VirtualHostsDir= | The directory in which you virtual hosts are stored | (empty) uses =/path/to/foswiki/virtualhosts= |
 | =ServerAlias= | a mapping of aliases to real hostnames | |
 | =DisabledServers= | a list of servers that are disabled temporarily even though there's a valid environment present in =VirtualHostsDir= |
 
@@ -104,6 +103,7 @@ the ones in the main Foswiki installation:
 | =templates/= | custom templates for this virtual host only |
 | =working/= | all sorts of temporary data |
 
+#HostSettings
 ---+++ Virtual host specific settings
 
 In each virtual host root, the server administrator can put a file called
@@ -147,39 +147,74 @@ configuration file.
 
 ---+++ Creating/disabling/removing/renaming virtual hosts
 
-*To create a virtual host*, you can use the provided script at
-=tools/virtualhosts-create.sh=. To create a virtual host for the example.com
-domain, you should run it like that:
+*To create a virtual host*, a configuration wizard is now available under the
+Extensions -> VirtualHostingContrib -> ={VirtualHostingContrib}{VirtualHostsDir}= key.
 
-<verbatim>
-$ ./tools/virtualhosts-create.sh example.com
-</verbatim>
+Click the button, and enter the name of the desired hostname into the next
+dialog, and select the desired options. (Don't enter the hostname into the directory field.)  Other fields in
+the dialog include:
 
-If you run this script as a user different from the one that runs the Foswiki
-code (e.g. you create the virtualhost as =root= but your web server runs as
-=www-data= or =nobody=), the =data/= and =pub/= directories will be their
-ownership properly set to the correct user (i.e. =www-data= or =nobody=).
+==Host template name==
 
-If you have a special virtual host called =_template=, then it will be copied
-over to the new virtual host. If there is no =_template= virtual host, the
+If you have one or more special virtual hosts named with a leading underscore (ie.  =_template=),
+you can choose it in a drop-down box in the dialog.  It will be copied
+over to the new virtual host.
+
+If there is no =_template= virtual host or you chose the =-none-= option, the
 script will create the virtual host by copying files from the main Foswiki
-data; this is indicated if your installation contains only virtual hosts, so
-the main Foswiki data will always be clean. You can also create a =_template=
+data; this is suggested if your installation contains only virtual hosts, so
+the main Foswiki data will always be clean. If the host supports symbolic
+links, the %SYSTEMWEB%, and the =_empty= and =_default= template webs will be linked
+rather than copied.
+
+You can also create a =_template=
 virtual host manually by copying the files from a Foswiki release tarball,
-or by manually creating the data you want for every newly created virtual hosts.  If
-your installation is brand new and you plan to use the main Foswiki data
+or by manually creating the data you want for every newly created virtual hosts.
+
+If your installation is brand new and you plan to use the main Foswiki data
 afterwards, you can also create the =_template= virtual host using the script,
 and that will _freeze_ a copy of the main Foswiki data for new virtual hosts
-created later.
+created later. (*caution* If you are running from a git checkout using
+pseudoinstall, any symbolic links in the webs will be preserved in the copy.)
 
-If you have a text file called =_template.conf= in your virtual hosts
-directory, when you create a virtual host for example.com you'll also get a
-=example.com.conf= file which is just equal to the =_template.conf= file,
-except that all occurrences of =%<nop>VIRTUALHOST%= will be replaced by the
+==Config template name==
+
+If you have a text file(s) named with a leading underscore (ie.  =_template.conf=)
+in your virtual hosts directory, you can chose the template config name in the
+dialog.
+
+When you create a virtual host for example.com you'll also get a
+=example.com.conf= file which is copied from the selected =_template.conf= file,
+All occurrences of =%<nop>VIRTUALHOST%= will be replaced by the
 virtual host name (=example.com= in this example). __Note__ that
 !VirtualHostingContrib does not care about the contents of the file, it just
 takes the content of =_template.conf=, replaces all occurrences of
-%VIRTUALHOST% by the virtual host name, and that's it.
+%VIRTUALHOST% by the virtual host name.
+
+*Caution:* The config file must be an executable perl file following the rules
+of the !LocalSite.cfg, and as described above in [[#HostSettings]].
+
+==Create .htpasswd file==
+
+By default, a new =.htpasswd= file will be created in the virtual hosts's data
+directory.  If you un-check the checkbox and bypass creation of .htpasswd,
+registration will be disabled in the new virtual host.
+
+<div class="foswikiHelp">%T% Note that the configuration wizard will honor the
+configured web names in the master configuration, only when creating a new
+virtual host from scratch:
+   * =$Foswiki::cfg{SystemWebName}=
+   * =$Foswiki::cfg{UsersWebName}=
+   * =$Foswiki::cfg{SandboxWebName}=
+   * =$Foswiki::cfg{TrashWebName}=
+If a template host is used, then whatever web names that exist in the
+template's data and pub directories will be used.  If they are different from
+the master site's configured names, then a custom =virtualhost.conf= *must* be
+used.
+</div>
+
+
+---++++ Managing virtual hosts
 
 *To disable a virtual host*, add it to the list of =DisabledServers=. This
 is a comma-separated list of those hosts that are temporarily inactive and won't
@@ -190,7 +225,7 @@ list again or remove the files of the virtual host permanently.
 virtual host for =example.com=, and your virtual hosts are stored in
 /var/lib/foswiki/virtualhosts (see [[#Settings]]), then it is enough to remove
 the =/var/lib/foswiki/virtualhosts/example.com= directory, plus any webserver
-configuration you have for that virtual host. Your mileage may vary.
+configuration you have for that virtual host.
 
 *To rename a virtual host*, you just have to rename it's directory, and if it's
 the case, change the configuration files accordingly.  Beware that after
@@ -223,6 +258,20 @@ reach the server using the alias name. This might also be the case when
 maintaining the site on a different server offline and syncing content later on
 to the machine that is able to serve the canonical domain.
 
+---++++ Using the original shell script to create a Virtual Host
+You can use the provided script at
+=tools/virtualhosts-create.sh=. To create a virtual host for the example.com
+domain, you should run it like that:
+
+<verbatim>
+$ ./tools/virtualhosts-create.sh example.com
+</verbatim>
+
+If you run this script as a user different from the one that runs the Foswiki
+code (e.g. you create the virtualhost as =root= but your web server runs as
+=www-data= or =nobody=), the =data/= and =pub/= directories will be their
+ownership properly set to the correct user (i.e. =www-data= or =nobody=).
+
 ---+++ Running command line tools against the virtual hosts
 
 !VirtualHostingContrib comes with a set of tools to run specific tasks on the
@@ -238,6 +287,11 @@ commandline, such as
    * virtualhosts-view: render a page of a virtual host on the commandline
    * virtualhosts-jsonrpc: a vhost-aware commandline tool for the JSON-RPC interface of 
      [[Foswiki:Extensions/JsonRpcContrib][JsonRpcContrib]]
+   * virtualhosts-convert-charset:  Run the CharsetConverterContrib convert
+     utility against virtual hosts when migrating From Foswiki 1.x to Foswiki
+     2.x.
+   * virtualhosts-convertTopicSettings: Utility for converting from Foswiki
+     1.x style deprecated DENY rules to Foswiki 2.x * Wildcard ACLs
 
 These scripts are located in the =tools/= subdirectory of your Foswiki installation
 and can be called from the commandline. They all understand the usual parameters
