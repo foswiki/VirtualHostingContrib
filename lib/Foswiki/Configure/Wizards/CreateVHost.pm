@@ -5,6 +5,9 @@ use strict;
 use warnings;
 
 use Assert;
+use File::Copy;
+use File::Copy::Recursive qw( dircopy );
+use File::Path qw( make_path );
 
 =begin TML
 
@@ -18,11 +21,10 @@ requested.
 require Foswiki::Configure::Wizard;
 our @ISA = ('Foswiki::Configure::Wizard');
 
-use Foswiki::Func                  ();
+use Foswiki::Func ();
 
 # THE FOLLOWING MUST BE MAINTAINED CONSISTENT WITH Extensions.JsonReport
 # They describe the format of an extension topic.
-
 
 =begin TML
 
@@ -58,51 +60,217 @@ sub create_vhost_1 {
 
 ---+ WIZARD create_vhost_2
 
-Stage 2 of the find extension process, follows on from find_extension_1.
-Given a search, get matching extensions. the report will then permit
-study and installation of the extensions.
-
 =cut
 
 sub create_vhost_2 {
     my ( $this, $reporter ) = @_;
 
-    my $pa = $this->param('args');
+    my $args = $this->param('args');
 
-    unless ( $pa->{name} ) {
+    unless ( $args->{name} ) {
         $reporter->ERROR("Site hostname required");
         return undef;
     }
 
-    _create_vhost( $this, $reporter, $pa->{name} );
+    $this->_create_vhost($reporter);
 
-    $reporter->NOTE( "Done" );
+    $reporter->NOTE("Done");
     return undef;
 }
 
 sub _create_vhost {
-    my ( $this, $reporter, $vhost ) = @_;
+    my ( $this, $reporter ) = @_;
 
-    my $vdir = $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} || "$Foswiki::cfg{DataDir}/../virtualhosts";
+    my $args = $this->param('args');
+
+    my $vdir = $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir};
+    unless ($vdir) {
+        $vdir = Cwd::abs_path( $Foswiki::cfg{DataDir} . '/../virtualhosts' );
+        $vdir =~ /(.*)$/;
+        $vdir = $1;    # untaint, we trust Foswiki configuration
+    }
+
+    $args->{vdir} = $vdir;
+    my $vhost = $args->{name};
 
     $reporter->ERROR("virtual host directory is missing") unless ( -e $vdir );
 
     if ( -e "$vdir/$vhost" ) {
         if ( -d "$vdir/$vhost" ) {
             $reporter->ERROR("Virtual host $vhost already exists.");
-        } 
+        }
         else {
-            $reporter->ERROR("Virtual host $vhost exists as a file. Unable to create.");
+            $reporter->ERROR(
+                "Virtual host $vhost exists as a file. Unable to create.");
         }
         return 0;
     }
+
+    if ( -d "$vdir/_template" ) {
+        $this->_createFromTemplate($reporter);
+        $this->_createConfigFile($reporter);
+    }
+    else {
+        $this->_createFromScratch($reporter);
+    }
+
+    $this->_setPermissions($reporter);
 }
 
+sub _createFromTemplate {
+    my $this     = shift;
+    my $reporter = shift;
+    my $args     = $this->param('args');
+
+    my ( $num_of_files_and_dirs, $num_of_dirs, $depth_traversed ) =
+      dircopy( "$args->{vdir}/_template", "$args->{vdir}/$args->{name}" );
+
+    $reporter->NOTE(
+"Created $args->{name}. copied: $num_of_files_and_dirs files and directories from _template."
+    );
+
+    return;
+}
+
+sub _createConfigFile {
+    my $this     = shift;
+    my $reporter = shift;
+    my $args     = $this->param('args');
+
+    if ( -e "$args->{vdir}/_template.conf" ) {
+        my $cfg = _readFile("$args->{vdir}/_template.conf");
+        $cfg =~ s/%VIRTUALHOST%/$args->{name}/g;
+        _saveFile( "$args->{vdir}/$args->{name}/$args->{name}.conf", $cfg );
+        $reporter->NOTE("Saved $args->{vdir}/$args->{name}/$args->{name}.conf");
+    }
+    return;
+}
+
+sub _createFromScratch {
+    my $this     = shift;
+    my $reporter = shift;
+    my $args     = $this->param('args');
+
+    $reporter->NOTE("Create for $args->{name} in vdir $args->{vdir}");
+
+    File::Path::make_path("$args->{vdir}/$args->{name}/data");
+    _symlink_or_copy(
+        "$Foswiki::cfg{DataDir}/mime.types",
+        "$args->{vdir}/$args->{name}/data/mime.types"
+    );
+    File::Path::make_path("$args->{vdir}/$args->{name}/pub");
+
+    $this->_copy_web('Main');
+    $this->_copy_web('Sandbox');
+    $this->_copy_web('Trash');
+
+    $this->_link_web('System');
+    $this->_link_web('_default');
+    $this->_link_web('_empty');
+
+    File::Path::make_path("$args->{vdir}/$args->{name}/working/tmp");
+    File::Path::make_path("$args->{vdir}/$args->{name}/working/work_areas");
+    File::Path::make_path(
+        "$args->{vdir}/$args->{name}/working/registration_approvals");
+    File::Path::make_path("$args->{vdir}/$args->{name}/working/logs");
+    File::Path::make_path("$args->{vdir}/$args->{name}/templates");
+
+    _create_htpasswd( $reporter, "$args->{vdir}/$args->{name}/data/.htpasswd" );
+
+    return;
+}
+
+sub _setPermissions {
+    return;
+}
+
+sub _copy_web {
+    my $this = shift;
+    my $web  = shift;
+    my $args = $this->param('args');
+
+    File::Copy::Recursive::dircopy( "$Foswiki::cfg{DataDir}/$web",
+        "$args->{vdir}/$args->{name}/data/$web" );
+    File::Copy::Recursive::dircopy( "$Foswiki::cfg{PubDir}/$web",
+        "$args->{vdir}/$args->{name}/pub/$web" )
+      if ( -d "$Foswiki::cfg{PubDir}/$web" );
+}
+
+sub _link_web {
+    my $this = shift;
+    my $web  = shift;
+    my $args = $this->param('args');
+
+    _symlink_or_copy( "$Foswiki::cfg{DataDir}/$web",
+        "$args->{vdir}/$args->{name}/data/$web" );
+    _symlink_or_copy( "$Foswiki::cfg{PubDir}/$web",
+        "$args->{vdir}/$args->{name}/pub/$web" )
+      if ( -d "$Foswiki::cfg{PubDir}/$web" );
+}
+
+sub _readFile {
+    my ($fn) = @_;
+    my $F;
+
+    if ( open( $F, '<:encoding(utf-8)', $fn ) ) {
+        local $/;
+        my $text = <$F>;
+        close($F);
+
+        return $text;
+    }
+    else {
+        return undef;
+    }
+}
+
+sub _saveFile {
+    my ( $name, $text ) = @_;
+    my $FILE;
+    unless ( open( $FILE, '>', $name ) ) {
+        die "Can't create file $name - $!\n";
+    }
+    binmode $FILE, ':encoding(utf-8)';
+    print $FILE $text;
+    close($FILE);
+}
+
+sub _symlink_or_copy {
+    my ( $from, $to ) = @_;
+
+    my $symlink = eval { symlink( "", "" ); 1 };
+
+    if ($symlink) {
+        symlink( $from, $to );
+    }
+    else {
+        dircopy( $from, $to );
+    }
+}
+
+sub _create_htpasswd {
+    my $reporter = shift;
+    my $f        = shift;
+    my $fh;
+
+    if ( !open( $fh, ">", $f ) || !close($fh) ) {
+        return $reporter->ERROR(
+            "Password file $f does not exist and could not be created: $!");
+    }
+    else {
+        $reporter->NOTE("A new password file $f has been created.");
+        unless ( chmod( 0600, $f ) ) {
+            $reporter->WARN(
+                "Permissions could not be changed on the new password file $f"
+            );
+        }
+    }
+}
 1;
 __END__
 Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 
-Copyright (C) 2008-2014 Foswiki Contributors. Foswiki Contributors
+Copyright (C) 2008-2017 Foswiki Contributors. Foswiki Contributors
 are listed in the AUTHORS file in the root of this distribution.
 NOTE: Please extend that file, not this notice.
 
@@ -124,97 +292,4 @@ but WITHOUT ANY WARRANTY; without even the implied warranty of
 MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 
 As per the GPL, removal of this notice is prohibited.
-
-create_skeleton() {
-  echo "Creating skeleton for virtual host ..."
-  mkdir -p "$VIRTUAL_HOSTS_DIR/$vhost/data"
-  ln -s "$FOSWIKI_DATA_DIR/mime.types" "$VIRTUAL_HOSTS_DIR/$vhost/data/"
-  mkdir -p "$VIRTUAL_HOSTS_DIR/$vhost/pub"
-}
-
-set_data_ownership() {
-  user_group=$(stat -c %U:%G $FOSWIKI_DATA_DIR)
-  echo "Setting data ownership to $user_group ..."
-  chown -R "$user_group" "$VIRTUAL_HOSTS_DIR/$vhost/data/"
-  chown -R "$user_group" "$VIRTUAL_HOSTS_DIR/$vhost/pub/"
-  chown -R "$user_group" "$VIRTUAL_HOSTS_DIR/$vhost/working/"
-}
-
-copy_web() {
-  web="$1"
-  echo "Copying web $web ..."
-  cp -r "$FOSWIKI_DATA_DIR/$web" "$VIRTUAL_HOSTS_DIR/$vhost/data/"
-  if [ -d "$FOSWIKI_PUB_DIR/$web" ]; then
-      cp -r "$FOSWIKI_PUB_DIR/$web" "$VIRTUAL_HOSTS_DIR/$vhost/pub/"
-  fi
-}
-
-symlink_web(){
-  web="$1"
-  echo "Symlinking web $web ..."
-  ln -s "$FOSWIKI_DATA_DIR/$web" "$VIRTUAL_HOSTS_DIR/$vhost/data/$web"
-  if [ -d "$FOSWIKI_PUB_DIR/$web" ]; then
-    ln -s "$FOSWIKI_PUB_DIR/$web" "$VIRTUAL_HOSTS_DIR/$vhost/pub/$web"
-  fi
-}
-
-create_directories() {
-  echo "Creating working directory ..."
-  mkdir -p "$VIRTUAL_HOSTS_DIR/$vhost/working/tmp"
-  mkdir -p "$VIRTUAL_HOSTS_DIR/$vhost/working/work_areas"
-  mkdir -p "$VIRTUAL_HOSTS_DIR/$vhost/working/registration_approvals"
-  mkdir -p "$VIRTUAL_HOSTS_DIR/$vhost/working/logs"
-  echo "Deny from all" > "$VIRTUAL_HOSTS_DIR/$vhost/working/.htaccess"
-  touch "$VIRTUAL_HOSTS_DIR/$vhost/data/.htpasswd"
-
-  echo "Creating templates directory ..."
-  mkdir -p "$VIRTUAL_HOSTS_DIR/$vhost/templates"
-}
-
-cleanup() {
-  echo "Cleaning up the new virtual host directory ..."
-  find "$VIRTUAL_HOSTS_DIR/$vhost" -type d -name .svn | xargs rm -rf
-}
-
-create_virtual_host_from_scratch(){
-  create_skeleton
-  copy_web    Main
-  copy_web    Sandbox
-  copy_web    Trash
-  symlink_web System
-  symlink_web _default
-  symlink_web _empty
-  create_directories
-  cleanup
-}
-
-copy_virtualhost_template() {
-  echo "Copying virtualhost template ..."
-  cp -r "$VIRTUAL_HOSTS_DIR/_template" "$VIRTUAL_HOSTS_DIR/$vhost"
-}
-
-maybe_create_configuration_file() {
-  echo "Creating configuration file from template ..."
-  if [ -e "$VIRTUAL_HOSTS_DIR/_template.conf" ]; then
-    sed -e "s/%VIRTUALHOST%/$vhost/g" "$VIRTUAL_HOSTS_DIR/_template.conf" > "$VIRTUAL_HOSTS_DIR/$vhost.conf"
-    highlight "Configuration file created: $VIRTUAL_HOSTS_DIR/$vhost.conf"
-  fi
-}
-
-highlight() {
-  echo -e "\033[33;01m$1\033[m"
-}
-
-if [ -e "$VIRTUAL_HOSTS_DIR/_template" ]; then
-  copy_virtualhost_template
-else
-  create_virtual_host_from_scratch
-fi
-
-set_data_ownership
-
-maybe_create_configuration_file
-
-highlight "Virtual host files in: $VIRTUAL_HOSTS_DIR/$vhost"
-
 

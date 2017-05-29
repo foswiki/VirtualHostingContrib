@@ -62,7 +62,7 @@ sub check_current_value {
     if ( scalar @list ) {
         $reporter->NOTE("\n *Virtual Hosts:* ");
         foreach my $host ( sort @list ) {
-            next if ( substr( $host, 1, 1 ) eq '_' );
+            next if ( substr( $host, 0, 1 ) eq '_' );
             $reporter->NOTE(
                 "   * $host "
                   . (
@@ -79,7 +79,8 @@ sub check_current_value {
         $reporter->NOTE(" *Template Hosts:* ");
         $nhost = 0;
         foreach my $host ( sort @list ) {
-            next unless ( substr( $host, 1, 1 ) eq '_' );
+            next unless ( substr( $host, 0, 1 ) eq '_' );
+            next if ( -f "$d/$host" );
             $reporter->NOTE("   * $host ");
             $nhost++;
         }
