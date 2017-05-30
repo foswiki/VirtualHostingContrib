@@ -147,10 +147,12 @@ sub _create_vhost {
     }
 
     # Validate input
+    $template = '' if ( $template eq '-none-' );
     if ( $template && ! -d "$vdir/$template" ) {
         $reporter->ERROR("Requested template host =$template= does not exist in =$vdir=!");
         return 0;
     }
+    $cfgtemplate = '' if ( $cfgtemplate eq '-none-' );
     if ( $cfgtemplate && ! -f "$vdir/$cfgtemplate" ) {
         $reporter->ERROR("Requested template configuration =$cfgtemplate= does not exist in =$vdir=!");
         return 0;

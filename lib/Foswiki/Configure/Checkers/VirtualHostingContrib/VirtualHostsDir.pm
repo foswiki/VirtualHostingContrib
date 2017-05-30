@@ -13,13 +13,20 @@ use Foswiki::Configure::FileUtil ();
 sub check_current_value {
     my ( $this, $reporter ) = @_;
 
-    my $d = $Foswiki::cfg{VirtualHostingContrib::VirtualHostsDir};
+    my $d = $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir};
 
-    unless ( defined $d ) {
+    # SMELL: This is pretty much useless, when running under a virtual host,
+    # as a BEGIN block forces this to be set. But useful when setting up under
+    # a real foswiki instance.
+    unless ( $d ) {
         $d = Cwd::abs_path( $Foswiki::cfg{DataDir} . '/../virtualhosts' );
         $d =~ /(.*)$/;
         $d = $1;    # untaint, we trust Foswiki configuration
-        $reporter->NOTE("Default path =$d= will be used.");
+    }
+
+    $reporter->NOTE("Path =$d= is used for virtual hosts.");
+    if ( $ENV{SCRIPT_FILENAME} && $ENV{SCRIPT_FILENAME} =~ m/virtualhosts\.fcgi$/ ) {
+        $reporter->NOTE("   * *Caution* Configure is running under a virtual host.  Changing this setting on a live system may require an immediate restart.");
     }
 
     if ( -d $d ) {
