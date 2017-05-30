@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="ProjectContributor" date="1496073590" format="1.1" version="1"}%
+%META:TOPICINFO{author="ProjectContributor" date="1496108938" format="1.1" version="1"}%
 ---+!! !VirtualHostingContrib
 <!--
 One line description, required for extensions repository catalog.
@@ -555,11 +555,17 @@ $ perl test.pl
 Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 
 |  Author(s): | [[Foswiki:Main/AntonioTerceiro][Antonio Terceiro]], [[Foswiki:Main/JoenioCosta][Joenio Costa]], [[Foswiki:Main/MichaelDaum][Michael Daum]] |
-|  Copyright: | &copy; 2010 [[http://www.colivre.coop.br/][Colivre]] |
+|  Copyright: | &copy; 2010 [[http://www.colivre.coop.br/][Colivre]], &copy; 2011-2017, Foswiki Contributors |
 |  License: | [[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]] |
 |  Release: | %$RELEASE% |
 |  Version: | %$VERSION% |
 |  Change History: | <!-- versions below in reverse order -->&nbsp; |
+|  30 May 2017 (1.12) | Foswikitask:Item9958: virtualhosts-create.sh has issues.<br/>\
+                        Foswikitask:Item11629: Add config checker and fail more gracefully.<br/>\
+                        Foswikitask:Item14408: VirtualHostingContrib needs to support convertTopicSettings.<br/>\
+                        Foswikitask:Item14409: Add checker and wizard to help manage virtual hosts.<br/>\
+                        Foswikitask:Item14410: VirtualHostingContrib not compatible with CharsetConverterContrib.<br/>\
+                        Foswikitask:Item14411: virtualhost.fcgi out of sync with foswiki.fcgi. |
 |  18 Mar 2014: | exclude server aliases running a command on all hosts; added =quiet= commandline parameter |
 |  10 Jul 2013: | added feature to temporarily disable virtual hosts; -- Foswiki:Main/MichaelDaum |
 |  01 Jul 2013: | added support for !WebStatistics and a couple of other commandline tools |
