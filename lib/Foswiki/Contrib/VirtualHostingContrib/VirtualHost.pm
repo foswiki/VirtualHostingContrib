@@ -30,6 +30,11 @@ sub find {
   my $DataDir         = $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . "/$hostname/data";
   my $WorkingDir      = $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . "/$hostname/working";
   my $PubDir          = $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . "/$hostname/pub";
+
+  # Preserve http/https from DefaultUrlHost.   May be needed when ForceDefaultUrlHost active behind reverse proxy
+  my ($protocol)      = $Foswiki::cfg{DefaultUrlHost} =~ m#^(https?://)#;
+  my $VirtualUrlHost  = "$protocol$hostname" . ($port && ($port ne '80') && ($port ne '443') ? (':' . $port) : '');
+
   my $self            = {
     hostname => $hostname,
     directory => $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir} . "/$hostname",
@@ -37,7 +42,7 @@ sub find {
       DataDir               => $DataDir,
       PubDir                => $PubDir,
       WorkingDir            => $WorkingDir,
-      DefaultUrlHost        => "http://$hostname" . ($port && ($port ne '80') && ($port ne '443') ? (':' . $port) : ''),
+      DefaultUrlHost        => $VirtualUrlHost,
       # values defined in terms of DataDir
       Htpasswd => {
         FileName            => "$DataDir/.htpasswd",
@@ -57,9 +62,14 @@ sub find {
 
   bless $self, $class;
 
-  # Make sure configure is unusable by default!  These can be overridden.
-  $Foswiki::cfg{Plugins}{ConfigurePlugin}{Enabled} = 0;
-  $Foswiki::cfg{FeatureAccess}{Configure} = '-';
+  # Make sure configure is unusable by any host other than the DefaultUrlHost.
+  # This change will persist under fcgi, so we need to restore it under the base host.
+  if ( $VirtualUrlHost ne $Foswiki::cfg{DefaultUrlHost} ) {
+      $Foswiki::cfg{Plugins}{ConfigurePlugin}{Enabled} = 0;
+  }
+  else {
+      $Foswiki::cfg{Plugins}{ConfigurePlugin}{Enabled} = 1;
+  }
 
   $self->{config}->{TemplatePath} = $self->_template_path();
   $self->_load_config();
