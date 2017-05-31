@@ -122,7 +122,7 @@ sub create_vhost_2 {
     my $vhost        = $args->{name};
     my $template     = $args->{template};
     my $cfgtemplate  = $args->{cfgtemplate};
-    my $createpasswd = $args->{createpasswd};
+    my $createpasswd = $args->{createpasswd} || '';
 
     my $form =
         '<form id="confirm_vhost">'
@@ -337,8 +337,8 @@ sub _createFromScratch {
 
     File::Path::make_path( "$args->{vdir}/$args->{name}/working/work_areas",
         { mode => DIRECTORY } );
-    File::Path::make_path("$args->{vdir}/$args->{name}/working/tmp"),
-      { mode => DIRECTORY };
+    File::Path::make_path("$args->{vdir}/$args->{name}/working/tmp",
+      { mode => DIRECTORY } );
     File::Path::make_path(
         "$args->{vdir}/$args->{name}/working/registration_approvals",
         { mode => DIRECTORY } );
