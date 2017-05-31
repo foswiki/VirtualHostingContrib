@@ -9,6 +9,11 @@ use File::Copy;
 use File::Copy::Recursive qw( dircopy );
 use File::Path qw( make_path );
 
+use constant DIRECTORY => 0755
+  ; # Directories need "exec" for directory operations. Matches {Store}{dirPermission}
+use constant SECURE => 0600
+  ; # passwords, Configuration. Read/write by Foswiki CGI, nothing else should need them.
+
 =begin TML
 
 ---+ package Foswiki::Configure::Wizards:CreateVHost
@@ -23,8 +28,15 @@ our @ISA = ('Foswiki::Configure::Wizard');
 
 use Foswiki::Func ();
 
-# THE FOLLOWING MUST BE MAINTAINED CONSISTENT WITH Extensions.JsonReport
-# They describe the format of an extension topic.
+sub _get_vdir {
+    my $vdir = $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir};
+    unless ($vdir) {
+        $vdir = Cwd::abs_path( $Foswiki::cfg{DataDir} . '/../virtualhosts' );
+        $vdir =~ /(.*)$/;
+        $vdir = $1;    # untaint, we trust Foswiki configuration
+    }
+    return $vdir;
+}
 
 =begin TML
 
@@ -38,12 +50,7 @@ virtual host to be created.
 sub create_vhost_1 {
     my ( $this, $reporter ) = @_;
 
-    my $vdir = $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir};
-    unless ($vdir) {
-        $vdir = Cwd::abs_path( $Foswiki::cfg{DataDir} . '/../virtualhosts' );
-        $vdir =~ /(.*)$/;
-        $vdir = $1;    # untaint, we trust Foswiki configuration
-    }
+    my $vdir = _get_vdir();
 
     my @templates;
     if ( opendir( my $dh, $vdir ) ) {
@@ -83,7 +90,7 @@ sub create_vhost_1 {
     $reporter->NOTE($form);
     my %data = (
         wizard => 'CreateVHost',
-        method => 'run_create',
+        method => 'create_vhost_2',
         form   => '#create_vhost',
         args   => {
 
@@ -98,6 +105,93 @@ sub create_vhost_1 {
 
 ---+ WIZARD create_vhost_2
 
+Stage 2 - Edit/confirm the configuration. Called with arguments:
+   * name - The Virtual host name
+   * template - The name of the host template directory.
+   * cfgtemplate - The name of the VirtualHost.cfg template
+
+Display a confirmation screen with the template expanded into a textarea.
+
+=cut
+
+sub create_vhost_2 {
+    my ( $this, $reporter ) = @_;
+
+    my $vdir         = _get_vdir();
+    my $args         = $this->param('args');
+    my $vhost        = $args->{name};
+    my $template     = $args->{template};
+    my $cfgtemplate  = $args->{cfgtemplate};
+    my $createpasswd = $args->{createpasswd};
+
+    my $form =
+        '<form id="confirm_vhost">'
+      . 'vhost name: '
+      . $vhost
+      . '<input type="hidden"  name="name" value="'
+      . $vhost
+      . '"></input></br/>';
+    $form .=
+        'Host Template name: '
+      . $template
+      . '<input type="hidden" name="template" value="'
+      . $template
+      . '"></input><br/>';
+    $form .=
+        'Config Template name: '
+      . $cfgtemplate
+      . '<input type="hidden" name="cfgtemplate" value="'
+      . $cfgtemplate
+      . '"></input><br/>';
+
+    $form .=
+        ".htpasswd file "
+      . ( ($createpasswd) ? 'will' : 'will not' )
+      . " be created.";
+    $form .=
+        '<input type="hidden" name="createpasswd" value="'
+      . $createpasswd
+      . '"></input><br/>';
+
+    $form .= "Configuration Template: $vdir/$cfgtemplate<br/>";
+
+    my $cfg = '';
+    if ( -f "$vdir/$cfgtemplate" ) {
+        $cfg = _readFile("$vdir/$cfgtemplate");
+        $cfg =~ s/%VIRTUALHOST%/$args->{name}/g;
+    }
+    $form .= "<textarea name='cfgtext' rows='4' cols='50'>$cfg</textarea>";
+
+    $form .= '</form>';
+
+    $reporter->NOTE("---+ Create Virtual Host - Confirm");
+    $reporter->NOTE($form);
+    my %data = (
+        wizard => 'CreateVHost',
+        method => 'run_create',
+        form   => '#confirm_vhost',
+        args   => {
+
+            # Other args come from the form
+        }
+    );
+    $reporter->NOTE( $reporter->WIZARD( 'Confirm', \%data ) );
+    return undef;
+
+}
+
+=begin TML
+
+---+ WIZARD run_create
+
+Stage 3 - Actually create the vhost.  Called with arguments:
+   * name - The Virtual host name
+   * template - The name of the host template directory.
+   * cfgtemplate - The name of the VirtualHost.cfg template
+   * cfgtext - Text content of cfgtemplate file.  Overrides conents if cfgtemplate present.
+
+This can be called from the bin/configure dialogs, or from tools/configure.
+
 =cut
 
 sub run_create {
@@ -110,30 +204,15 @@ sub run_create {
         return undef;
     }
 
-    $this->_create_vhost($reporter);
-
-    $reporter->NOTE("\nDone");
-    return undef;
-}
-
-sub _create_vhost {
-    my ( $this, $reporter ) = @_;
-
-    my $args = $this->param('args');
-
-    my $vdir = $Foswiki::cfg{VirtualHostingContrib}{VirtualHostsDir};
-    unless ($vdir) {
-        $vdir = Cwd::abs_path( $Foswiki::cfg{DataDir} . '/../virtualhosts' );
-        $vdir =~ /(.*)$/;
-        $vdir = $1;    # untaint, we trust Foswiki configuration
-    }
+    my $vdir = _get_vdir();
 
     $args->{vdir} = $vdir;
     my $vhost       = $args->{name};
     my $template    = $args->{template};
     my $cfgtemplate = $args->{cfgtemplate};
+    my $cfgtext     = $args->{cfgtext};
 
-    $reporter->ERROR("virtual host directory is missing") unless ( -e $vdir );
+    $reporter->ERROR("virtual host directory is missing") unless ( -d $vdir );
 
     if ( -e "$vdir/$vhost" ) {
         if ( -d "$vdir/$vhost" ) {
@@ -148,13 +227,16 @@ sub _create_vhost {
 
     # Validate input
     $template = '' if ( $template eq '-none-' );
-    if ( $template && ! -d "$vdir/$template" ) {
-        $reporter->ERROR("Requested template host =$template= does not exist in =$vdir=!");
+    if ( $template && !-d "$vdir/$template" ) {
+        $reporter->ERROR(
+            "Requested template host =$template= does not exist in =$vdir=!");
         return 0;
     }
     $cfgtemplate = '' if ( $cfgtemplate eq '-none-' );
-    if ( $cfgtemplate && ! -f "$vdir/$cfgtemplate" ) {
-        $reporter->ERROR("Requested template configuration =$cfgtemplate= does not exist in =$vdir=!");
+    if ( $cfgtemplate && !-f "$vdir/$cfgtemplate" ) {
+        $reporter->ERROR(
+"Requested template configuration =$cfgtemplate= does not exist in =$vdir=!"
+        );
         return 0;
     }
 
@@ -165,7 +247,7 @@ sub _create_vhost {
         $this->_createFromScratch($reporter);
     }
 
-    if ( $cfgtemplate && -f "$vdir/$cfgtemplate" ) {
+    if ( ( $cfgtemplate && -f "$vdir/$cfgtemplate" ) || $cfgtext ) {
         $this->_createConfigFile($reporter);
     }
 
@@ -180,6 +262,9 @@ sub _create_vhost {
     }
 
     $this->_setPermissions($reporter);
+
+    $reporter->NOTE("\nDone");
+    return undef;
 }
 
 sub _createFromTemplate {
@@ -204,10 +289,21 @@ sub _createConfigFile {
     my $reporter = shift;
     my $args     = $this->param('args');
 
-    if ( -f "$args->{vdir}/$args->{cfgtemplate}" ) {
+    if ( $args->{cfgtext} ) {
+        _saveFile( "$args->{vdir}/$args->{name}/VirtualHost.conf",
+            $args->{cfgtext} );
+    }
+    elsif ( -f "$args->{vdir}/$args->{cfgtemplate}" ) {
         my $cfg = _readFile("$args->{vdir}/$args->{cfgtemplate}");
         $cfg =~ s/%VIRTUALHOST%/$args->{name}/g;
-        _saveFile( "$args->{vdir}/$args->{name}/$args->{name}.conf", $cfg );
+        _saveFile( "$args->{vdir}/$args->{name}/VirtualHost.conf", $cfg );
+        unless (
+            chmod( SECURE, "$args->{vdir}/$args->{name}/$args->{name}.conf" )
+          )
+        {
+            $reporter->WARN(
+                "Unable to set set permissions on $args->{name}.conf");
+        }
         $reporter->NOTE(
             "   * Saved =$args->{vdir}/$args->{name}/$args->{name}.conf=");
     }
@@ -222,12 +318,14 @@ sub _createFromScratch {
     $reporter->NOTE(
         "   * Create for =$args->{name}= in directory =$args->{vdir}=");
 
-    File::Path::make_path("$args->{vdir}/$args->{name}/data");
+    File::Path::make_path( "$args->{vdir}/$args->{name}/data",
+        { mode => DIRECTORY } );
     _symlink_or_copy(
         "$Foswiki::cfg{DataDir}/mime.types",
         "$args->{vdir}/$args->{name}/data/mime.types"
     );
-    File::Path::make_path("$args->{vdir}/$args->{name}/pub");
+    File::Path::make_path( "$args->{vdir}/$args->{name}/pub",
+        { mode => DIRECTORY } );
 
     $this->_copy_web( $Foswiki::cfg{UsersWebName} );
     $this->_copy_web( $Foswiki::cfg{SandboxWebName} );
@@ -237,12 +335,17 @@ sub _createFromScratch {
     $this->_link_web('_default');
     $this->_link_web('_empty');
 
-    File::Path::make_path("$args->{vdir}/$args->{name}/working/tmp");
-    File::Path::make_path("$args->{vdir}/$args->{name}/working/work_areas");
+    File::Path::make_path( "$args->{vdir}/$args->{name}/working/work_areas",
+        { mode => DIRECTORY } );
+    File::Path::make_path("$args->{vdir}/$args->{name}/working/tmp"),
+      { mode => DIRECTORY };
     File::Path::make_path(
-        "$args->{vdir}/$args->{name}/working/registration_approvals");
-    File::Path::make_path("$args->{vdir}/$args->{name}/working/logs");
-    File::Path::make_path("$args->{vdir}/$args->{name}/templates");
+        "$args->{vdir}/$args->{name}/working/registration_approvals",
+        { mode => DIRECTORY } );
+    File::Path::make_path( "$args->{vdir}/$args->{name}/working/logs",
+        { mode => DIRECTORY } );
+    File::Path::make_path( "$args->{vdir}/$args->{name}/templates",
+        { mode => DIRECTORY } );
 
     return;
 }
@@ -329,9 +432,9 @@ sub _create_htpasswd {
     }
 
     if ( -e $f ) {
-        unless ( chmod( 0600, $f ) ) {
+        unless ( chmod( SECURE, $f ) ) {
             $reporter->WARN(
-                "Permissions could not be changed on the password file =$f=" );
+                "Permissions could not be changed on the password file =$f=");
         }
     }
 }
