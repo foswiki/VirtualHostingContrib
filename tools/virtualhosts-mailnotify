@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/env perl
 #
 # Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
@@ -25,9 +25,15 @@
 # perl -I /usr/local/foswiki/bin /usr/local/foswiki/tools/mailnotify
 
 use strict;
+use warnings;
 use File::Basename;
 
 BEGIN {
+    if (-e './setlib.cfg') {
+      unshift @INC, '.';
+    } elsif (-e '../bin/setlib.cfg') {
+      unshift @INC, '../bin';
+    }
     require 'setlib.cfg';
 }
 
@@ -36,6 +42,8 @@ my @webs = ();
 my @exwebs = ();
 my $nonews = 0;
 my $nochanges = 0;
+my $noreset = 0;
+my $nomail = 0;
 
 # Called from the command line
 foreach my $arg ( @ARGV ) {
@@ -45,6 +53,10 @@ foreach my $arg ( @ARGV ) {
         $nonews = 1;
     } elsif ( $arg eq "-nochanges" ) {
         $nochanges = 1;
+    } elsif ( $arg eq "-noreset" ) {
+        $noreset = 1;
+    } elsif ( $arg eq '-nomail' ) {
+        $nomail = 1;
     } elsif ( $arg =~ m/^-(.*)/ ) {
         push( @exwebs, $1 );
     } else {
@@ -64,6 +76,15 @@ Foswiki::Contrib::VirtualHostingContrib::VirtualHost->run_on_each(
             # Foswiki 1.0.x
             Foswiki::Contrib::MailerContrib::mailNotify(
                 \@webs, undef, $verbose, \@exwebs, $nonews, $nochanges );
+        } elsif ($Foswiki::Contrib::MailerContrib::VERSION >= 2.8 ) {
+            # Foswiki 1.2.x+
+            Foswiki::Contrib::MailerContrib::mailNotify( \@webs, \@exwebs, 
+              verbose => $verbose,
+              news    => !$nonews,
+              changes => !$nochanges,
+              reset   => !$noreset,
+              mail    => !$nomail
+            );
         } else {
             # Foswiki 1.1.x+
             Foswiki::Contrib::MailerContrib::mailNotify(
