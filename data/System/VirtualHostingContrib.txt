@@ -547,8 +547,8 @@ Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 %$DEPENDENCIES%
 
 ---++ Change History
-|  20 Jun 2017 | Foswiktask:Item14424: remove pending registrations. <br />\
-                 Foswiktask:Item14423: adjust to newer versions of <nop>MailerContrib |
+|  20 Jun 2017 | Foswikitask:Item14424: remove pending registrations. <br />\
+                 Foswikitask:Item14423: adjust to newer versions of <nop>MailerContrib |
 |  30 May 2017 | Foswikitask:Item9958: virtualhosts-create.sh has issues.<br/>\
                  Foswikitask:Item11629: Add config checker and fail more gracefully.<br/>\
                  Foswikitask:Item14408: VirtualHostingContrib needs to support convertTopicSettings.<br/>\
