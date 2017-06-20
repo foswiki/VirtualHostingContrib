@@ -1,5 +1,5 @@
 # ---+ Extensions
-# ---++ VirtualHostingContrib settings
+# ---++ VirtualHostingContrib
 # This is the configuration used by the <b>VirtualHostingContrib</b>. It sets
 # the options for the Foswiki virtual hosting system.
 

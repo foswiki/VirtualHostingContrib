@@ -1,16 +1,7 @@
 %META:TOPICINFO{author="ProjectContributor" date="1496108938" format="1.1" version="1"}%
 ---+!! !VirtualHostingContrib
-<!--
-One line description, required for extensions repository catalog.
-BuildContrib will fill in the SHORTDESCRIPTION with the value of
-$SHORTDESCRIPTION from the .pm module, or you can redefine it here if you
-prefer.
-   * Set SHORTDESCRIPTION = %$SHORTDESCRIPTION%
--->
-
 <img style="float:right" src="%ATTACHURL%/logo-colivre.png" />
-
-%SHORTDESCRIPTION%
+%FORMFIELD{"Description"}%
 
 %TOC%
 
@@ -75,7 +66,7 @@ configuration interface:
 | *Setting* | *Meaning* | *Default value* |
 | =VirtualHostsDir= | The directory in which you virtual hosts are stored | (empty) uses =/path/to/foswiki/virtualhosts= |
 | =ServerAlias= | a mapping of aliases to real hostnames | |
-| =DisabledServers= | a list of servers that are disabled temporarily even though there's a valid environment present in =VirtualHostsDir= |
+| =DisabledServers= | a list of servers that are disabled temporarily even though there's a valid environment present in =VirtualHostsDir= | |
 
 ---+++ The structure of a virtualhost
 
@@ -362,9 +353,7 @@ We need something like this:
     |    |                                 |
     |    V                                 |
 +------------------+             +---------+---------+
-|                  |             |                   |
 | Incoming Request +             | Outgoing Response +
-|                  |             |                   |
 +--------+---------+             +-------------------+
          |                                 ^
          | Configuration ajusted           |
@@ -554,18 +543,18 @@ $ perl test.pl
 
 Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 
-|  Author(s): | [[Foswiki:Main/AntonioTerceiro][Antonio Terceiro]], [[Foswiki:Main/JoenioCosta][Joenio Costa]], [[Foswiki:Main/MichaelDaum][Michael Daum]] |
-|  Copyright: | &copy; 2010 [[http://www.colivre.coop.br/][Colivre]], &copy; 2011-2017, Foswiki Contributors |
-|  License: | [[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]] |
-|  Release: | %$RELEASE% |
-|  Version: | %$VERSION% |
-|  Change History: | <!-- versions below in reverse order -->&nbsp; |
-|  30 May 2017 (1.12) | Foswikitask:Item9958: virtualhosts-create.sh has issues.<br/>\
-                        Foswikitask:Item11629: Add config checker and fail more gracefully.<br/>\
-                        Foswikitask:Item14408: VirtualHostingContrib needs to support convertTopicSettings.<br/>\
-                        Foswikitask:Item14409: Add checker and wizard to help manage virtual hosts.<br/>\
-                        Foswikitask:Item14410: VirtualHostingContrib not compatible with CharsetConverterContrib.<br/>\
-                        Foswikitask:Item14411: virtualhost.fcgi out of sync with foswiki.fcgi. |
+---++ Dependencies
+%$DEPENDENCIES%
+
+---++ Change History
+|  20 Jun 2017 | Foswiktask:Item14424: remove pending registrations. <br />\
+                 Foswiktask:Item14423: adjust to newer versions of <nop>MailerContrib |
+|  30 May 2017 | Foswikitask:Item9958: virtualhosts-create.sh has issues.<br/>\
+                 Foswikitask:Item11629: Add config checker and fail more gracefully.<br/>\
+                 Foswikitask:Item14408: VirtualHostingContrib needs to support convertTopicSettings.<br/>\
+                 Foswikitask:Item14409: Add checker and wizard to help manage virtual hosts.<br/>\
+                 Foswikitask:Item14410: VirtualHostingContrib not compatible with CharsetConverterContrib.<br/>\
+                 Foswikitask:Item14411: virtualhost.fcgi out of sync with foswiki.fcgi. |
 |  18 Mar 2014: | exclude server aliases running a command on all hosts; added =quiet= commandline parameter |
 |  10 Jul 2013: | added feature to temporarily disable virtual hosts; -- Foswiki:Main/MichaelDaum |
 |  01 Jul 2013: | added support for !WebStatistics and a couple of other commandline tools |
@@ -574,8 +563,15 @@ Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 |  02 Nov 2010(2): | code cleanup and performance optimization -- Foswiki:Main/AntonioTerceiro |
 |  02 Nov 2010:    | added support for listening on non-standard ports; performance optimization -- Foswiki:Main/AntonioTerceiro |
 |  16 Jul 2010:    | first release ([[Foswiki:Main/AntonioTerceiro][Antonio Terceiro]])  |
-|  Dependencies: | %$DEPENDENCIES% |
-|  Home page: | Foswiki:Extensions/VirtualHostingContrib |
-|  Support: | Foswiki:Support/VirtualHostingContrib |
 
-<!-- Do _not_ attempt to edit this topic; it is auto-generated. -->
+
+%META:FORM{name="PackageForm"}%
+%META:FIELD{name="Author" title="Author" value="[[Foswiki:Main/AntonioTerceiro][Antonio Terceiro]], [[Foswiki:Main/JoenioCosta][Joenio Costa]], [[Foswiki:Main/MichaelDaum][Michael Daum]]"}%
+%META:FIELD{name="Version" title="Version" value="%25$VERSION%25"}%
+%META:FIELD{name="Release" title="Release" value="%25$RELEASE%25"}%
+%META:FIELD{name="Description" title="Description" value="%25$SHORTDESCRIPTION%25"}%
+%META:FIELD{name="Repository" title="Repository" value="https://github.com/foswiki/%25TOPIC%25"}%
+%META:FIELD{name="Copyright" title="Copyright" value="&copy; 2010 [[http://www.colivre.coop.br/][Colivre]], &copy; 2011-2017 Foswiki Contributors"}%
+%META:FIELD{name="License" title="License" value="[[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]]"}%
+%META:FIELD{name="Home" title="Home" value="Foswiki:Extensions/%25TOPIC%25"}%
+%META:FIELD{name="Support" title="Support" value="Foswiki:Support/%25TOPIC%25"}%

@@ -87,7 +87,7 @@ __END__
 
 =head1 SYNOPSIS
 
-foswiki.fcgi [options]
+virtualhosts.fcgi [options]
 
   Options:
     -l --listen     Socket to listen on

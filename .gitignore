@@ -1,0 +1,11 @@
+*.gz
+*.lease
+igp_*
+*.swp
+/VirtualHostingContrib.md5
+/VirtualHostingContrib.sha1
+/VirtualHostingContrib.tgz
+/VirtualHostingContrib.txt
+/VirtualHostingContrib.zip
+/VirtualHostingContrib_installer
+/VirtualHostingContrib_installer.pl
