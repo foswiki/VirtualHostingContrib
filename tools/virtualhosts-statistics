@@ -42,12 +42,12 @@ if ($hostname) {
 }
 
 sub doit {
-  printf("=> Processing %s\n", $Foswiki::Contrib::VirtualHostingContrib::VirtualHost::CURRENT) if $verbose;
+  printf STDERR "=> Processing %s\n", $Foswiki::Contrib::VirtualHostingContrib::VirtualHost::CURRENT if $verbose;
   $Foswiki::engine->run();
 }
 
 __END__
-Foswiki - The Free and Open Source Wiki, http://foswiki.org/
+Foswiki - The Free and Open Source Wiki, https://foswiki.org/
 
 Copyright (C) 2008-2017 Foswiki Contributors. Foswiki Contributors
 are listed in the AUTHORS file in the root of this distribution.

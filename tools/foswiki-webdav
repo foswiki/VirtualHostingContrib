@@ -1,0 +1,37 @@
+Listen 81
+NameVirtualHost *:81
+ServerSignature On
+ServerAdmin webmaster@michaeldaumconsulting.com
+ServerName localhost
+
+<VirtualHost *:81>
+  ServerName localhost
+  DocumentRoot /home/www-data/vhosts/localhost/html
+  Options -Indexes
+
+  PerlConfigRequire /home/www-data/foswiki/trunk/core/tools/virtualhosts-webdavcontrib-startup
+  PerlLoadModule Apache::FoswikiDAVHandler
+
+  <Location "/dav">
+
+    SetHandler perl-script
+
+    FoswikiLocation /dav
+    FoswikiFilesysHandler Filesys::Virtual::Foswiki
+#    FoswikiFilesysHandler Filesys::Virtual::PlainPlusAttrs
+
+    PerlHandler Apache::FoswikiDAVHandler
+
+    AuthType Basic
+    AuthName "MDC Wiki"
+    AuthBasicProvider ldap
+    AuthLDAPRemoteUserIsDN off
+    #AuthLDAPDereferenceAliases never
+    AuthzLDAPAuthoritative off
+    AuthLDAPUrl ldap://localhost:389/ou=people,dc=nodomain?uid?one
+    Require valid-user
+
+  </Location>
+
+
+</VirtualHost>

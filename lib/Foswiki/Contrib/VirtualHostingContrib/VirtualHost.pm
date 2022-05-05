@@ -1,6 +1,6 @@
 # Contrib for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# Copyright (C) 2010-2017 Foswiki Contributors.
+# Copyright (C) 2010-2022 Foswiki Contributors.
 # All Rights Reserved. TWiki Contributors and Foswiki Contributors
 # are listed in the AUTHORS file in the root of this distribution.
 # NOTE: Please extend that file, not this notice.
@@ -78,6 +78,7 @@ sub find {
       TempfileDir           => "$WorkingDir/tmp",
     }
   };
+
 
   bless $self, $class;
 
@@ -172,11 +173,9 @@ sub _config {
 
 sub _validate_hostname {
   my $hostname = shift;
-  return undef unless $hostname;
+  return unless $hostname;
   if ($hostname =~ /^[\w-]+(\.[\w-]+)*$/) {
     return $&;
-  } else {
-    return undef;
   }
 }
 
@@ -205,6 +204,7 @@ sub _load_config {
     open CONFIG, $config_file;
     my @config = <CONFIG>;
     my $config = join('',@config);
+    close CONFIG;
 
     # untaint; we trust the virtual host configuration file
     $config =~ /(.*)/ms; $config = $1;
@@ -214,10 +214,14 @@ sub _load_config {
     $config =~ s/\$Foswiki::cfg/\$VirtualHost/g;
 
     eval $config;
-    close CONFIG;
+    if ($@) {
+      print STDERR "Error while reading config file: $@\n";
+    }
     for my $key (keys(%VirtualHost)) {
       $self->{config}->{$key} = $VirtualHost{$key};
     }
+  } else {
+    print STDERR "cannot read config file $config_file\n";
   }
 }
 

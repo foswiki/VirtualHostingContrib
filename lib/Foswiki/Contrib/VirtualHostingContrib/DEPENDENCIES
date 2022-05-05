@@ -1,2 +1,2 @@
 File::Copy::Recursive,>=0,cpan,Required.
-
+Foswiki::Contrib::FastCGIEngineContrib,>=1.20,perl,Required.

@@ -37,7 +37,7 @@ use Foswiki::Request::Cache ();
 use Foswiki::Meta ();
 use Foswiki::Contrib::VirtualHostingContrib::VirtualHost ();
 
-my $verbose = 0;
+my $verbose = 1;
 my $hostname = '';
 
 foreach my $arg (@ARGV) {
@@ -57,16 +57,20 @@ if ($hostname) {
 }
 
 sub doit {
-  printf("=> Processing %s\n", $Foswiki::Contrib::VirtualHostingContrib::VirtualHost::CURRENT) if $verbose;
+  printf STDERR "=> Processing %s\n", $Foswiki::Contrib::VirtualHostingContrib::VirtualHost::CURRENT if $verbose;
+  my $session = Foswiki->new();
+
   Foswiki::LoginManager::expireDeadSessions();
   Foswiki::UI::Register::expirePendingRegistrations();
   Foswiki::Request::Cache::cleanup();
-  my $root = new Foswiki::Meta( new Foswiki() );
+  my $root = new Foswiki::Meta( $session );
   $root->onTick( time() );
+
+  $session->finish();
 }
 
 __END__
-Foswiki - The Free and Open Source Wiki, http://foswiki.org/
+Foswiki - The Free and Open Source Wiki, https://foswiki.org/
 
 Copyright (C) 2009-2017 Foswiki Contributors. Foswiki Contributors
 are listed in the AUTHORS file in the root of this distribution.

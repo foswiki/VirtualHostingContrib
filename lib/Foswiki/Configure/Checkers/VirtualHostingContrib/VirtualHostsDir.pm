@@ -5,10 +5,11 @@ use strict;
 use warnings;
 
 use Assert;
-use Foswiki::Configure::Checkers::PATH ();
-our @ISA = ('Foswiki::Configure::Checkers::PATH');
-
+use Foswiki::Sandbox ();
 use Foswiki::Configure::FileUtil ();
+use Foswiki::Configure::Checkers::PATH ();
+
+our @ISA = ('Foswiki::Configure::Checkers::PATH');
 
 sub check_current_value {
     my ( $this, $reporter ) = @_;
@@ -100,7 +101,7 @@ sub check_current_value {
 __END__
 Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 
-Copyright (C) 2015-2017 Foswiki Contributors. Foswiki Contributors
+Copyright (C) 2015-2022 Foswiki Contributors. Foswiki Contributors
 are listed in the AUTHORS file in the root of this distribution.
 NOTE: Please extend that file, not this notice.
 

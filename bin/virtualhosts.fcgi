@@ -27,7 +27,7 @@ use strict;
 use warnings;
 
 BEGIN {
-    $Foswiki::cfg{Engine} = 'Foswiki::Engine::FastCGI';
+    $Foswiki::cfg{Engine} = 'Foswiki::Engine::VirtualHostingFastCGI';
     @INC = ( '.', grep { $_ ne '.' } @INC );
     delete $ENV{FOSWIKI_ACTION} if exists $ENV{FOSWIKI_ACTION};
     require 'setlib.cfg';
@@ -37,7 +37,6 @@ use Getopt::Long;
 use Pod::Usage;
 use Foswiki;
 use Foswiki::UI;
-use Foswiki::Contrib::VirtualHostingContrib;
 use Cwd;
 
 our ($script) = $0         =~ /^(.*)$/;
@@ -45,7 +44,11 @@ our ($dir)    = Cwd::cwd() =~ /^(.*)$/;
 
 my @argv = @ARGV;
 
-my ( $listen, $nproc, $max, $size, $check, $pidfile, $manager, $detach, $help, $quiet );
+my (
+    $listen,  $nproc,  $max,  $size,  $check, $pidfile,
+    $manager, $detach, $help, $quiet, $pname, $warming,
+);
+
 GetOptions(
     'listen|l=s'  => \$listen,
     'nproc|n=i'   => \$nproc,
@@ -57,6 +60,8 @@ GetOptions(
     'daemon|d'    => \$detach,
     'help|?'      => \$help,
     'quiet|q'     => \$quiet,
+    'pname|a=s'   => \$pname,
+    'warming|w=i' => \$warming,
 );
 
 pod2usage(1) if $help;
@@ -80,6 +85,8 @@ $Foswiki::engine->run(
         max     => $max,
         size    => $size,
         check   => $check,
+        pname   => $pname,
+        warming => $warming,
     }
 );
 
@@ -100,6 +107,8 @@ virtualhosts.fcgi [options]
     -d --daemon     Detach from terminal and keeps running as a daemon
     -q --quiet      Disable notification messages
     -? --help       Display this help and exits
+    -a --pname      Process name to display in ps output for the process-manager task.
+    -w --warming    Enable warming of workers, defaults to 1
 
   Note:
     FCGI manager class defaults to Foswiki::Engine::FastCGI::ProcManager, a

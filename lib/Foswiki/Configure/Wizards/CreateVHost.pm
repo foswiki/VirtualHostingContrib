@@ -76,8 +76,8 @@ sub create_vhost_1 {
       . '<option selected value="-none-">-none-</option>';
     if ( scalar @templates ) {
         foreach my $template ( sort @templates ) {
-            next unless ( -f "$vdir/$template" );
-            $form .= "<option value='$template'>$template</option>";
+            next unless ( -f "$vdir/$template/VirtualHost.cfg" );
+            $form .= "<option value='$template/VirtualHost.cfg'>$template/VirtualHost.cfg</option>";
         }
     }
     $form .= '</select><br/>';
@@ -98,7 +98,7 @@ sub create_vhost_1 {
         }
     );
     $reporter->NOTE( $reporter->WIZARD( 'Create Vhost', \%data ) );
-    return undef;
+    return;
 }
 
 =begin TML
@@ -176,7 +176,7 @@ sub create_vhost_2 {
         }
     );
     $reporter->NOTE( $reporter->WIZARD( 'Confirm', \%data ) );
-    return undef;
+    return;
 
 }
 
@@ -201,7 +201,7 @@ sub run_create {
 
     unless ( $args->{name} ) {
         $reporter->ERROR("Site hostname required");
-        return undef;
+        return;
     }
 
     my $vdir = _get_vdir();
@@ -264,7 +264,7 @@ sub run_create {
     $this->_setPermissions($reporter);
 
     $reporter->NOTE("\nDone");
-    return undef;
+    return;
 }
 
 sub _createFromTemplate {
@@ -290,22 +290,22 @@ sub _createConfigFile {
     my $args     = $this->param('args');
 
     if ( $args->{cfgtext} ) {
-        _saveFile( "$args->{vdir}/$args->{name}/VirtualHost.conf",
+        _saveFile( "$args->{vdir}/$args->{name}/VirtualHost.cfg",
             $args->{cfgtext} );
     }
     elsif ( -f "$args->{vdir}/$args->{cfgtemplate}" ) {
         my $cfg = _readFile("$args->{vdir}/$args->{cfgtemplate}");
         $cfg =~ s/%VIRTUALHOST%/$args->{name}/g;
-        _saveFile( "$args->{vdir}/$args->{name}/VirtualHost.conf", $cfg );
+        _saveFile( "$args->{vdir}/$args->{name}/VirtualHost.cfg", $cfg );
         unless (
-            chmod( SECURE, "$args->{vdir}/$args->{name}/$args->{name}.conf" )
+            chmod( SECURE, "$args->{vdir}/$args->{name}/$args->{name}.cfg" )
           )
         {
             $reporter->WARN(
-                "Unable to set set permissions on $args->{name}.conf");
+                "Unable to set set permissions on $args->{name}.cfg");
         }
         $reporter->NOTE(
-            "   * Saved =$args->{vdir}/$args->{name}/$args->{name}.conf=");
+            "   * Saved =$args->{vdir}/$args->{name}/$args->{name}.cfg=");
     }
     return;
 }
@@ -390,7 +390,7 @@ sub _readFile {
         return $text;
     }
     else {
-        return undef;
+        return;
     }
 }
 
@@ -442,7 +442,7 @@ sub _create_htpasswd {
 __END__
 Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 
-Copyright (C) 2008-2017 Foswiki Contributors. Foswiki Contributors
+Copyright (C) 2008-2022 Foswiki Contributors. Foswiki Contributors
 are listed in the AUTHORS file in the root of this distribution.
 NOTE: Please extend that file, not this notice.
 

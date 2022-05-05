@@ -547,6 +547,10 @@ Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 %$DEPENDENCIES%
 
 ---++ Change History
+|  05 May 2022 | rewrite to prevent monkey-patching the core engine; \
+                 support warming up in newer !FastCGIEngineContrib; \
+                 fixed multiple memory and filehandler leaks; \
+                 added virtualhosts-save tool |
 |  20 Jun 2017 | Foswikitask:Item14424: remove pending registrations. <br />\
                  Foswikitask:Item14423: adjust to newer versions of <nop>MailerContrib |
 |  30 May 2017 | Foswikitask:Item9958: virtualhosts-create.sh has issues.<br/>\
@@ -571,7 +575,7 @@ Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 %META:FIELD{name="Release" title="Release" value="%25$RELEASE%25"}%
 %META:FIELD{name="Description" title="Description" value="%25$SHORTDESCRIPTION%25"}%
 %META:FIELD{name="Repository" title="Repository" value="https://github.com/foswiki/%25TOPIC%25"}%
-%META:FIELD{name="Copyright" title="Copyright" value="&copy; 2010 [[http://www.colivre.coop.br/][Colivre]], &copy; 2011-2017 Foswiki Contributors"}%
+%META:FIELD{name="Copyright" title="Copyright" value="&copy; 2010 [[http://www.colivre.coop.br/][Colivre]], &copy; 2011-2022 Foswiki Contributors"}%
 %META:FIELD{name="License" title="License" value="[[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]]"}%
 %META:FIELD{name="Home" title="Home" value="Foswiki:Extensions/%25TOPIC%25"}%
 %META:FIELD{name="Support" title="Support" value="Foswiki:Support/%25TOPIC%25"}%

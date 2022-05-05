@@ -86,6 +86,8 @@ sub doit {
           "Processed $topicCounter topics in $web;  Updated $savedTopics\n";
         $savedTopics = 0;
     }
+
+    $session->finish();
 }
 
 sub scanTopic {
@@ -441,7 +443,7 @@ on all expected changes.   No changes are written.
 =cut
 
 __END__
-# Foswiki - The Free and Open Source Wiki, http://foswiki.org/
+# Foswiki - The Free and Open Source Wiki, https://foswiki.org/
 #
 # Copyright (C) 2008-2017 Foswiki Contributors. Foswiki Contributors
 # are listed in the AUTHORS file in the root of this distribution.
@@ -463,6 +465,6 @@ __END__
 # MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
 #
 # As per the GPL, removal of this notice is prohibited.
-# Foswiki - The Free and Open Source Wiki, http://foswiki.org/
+# Foswiki - The Free and Open Source Wiki, https://foswiki.org/
 #
 

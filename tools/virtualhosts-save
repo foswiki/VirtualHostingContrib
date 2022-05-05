@@ -14,7 +14,7 @@ BEGIN {
       unshift @INC, '../bin';
     }
     require 'setlib.cfg';
-    $ENV{FOSWIKI_ACTION} = 'view';
+    $ENV{FOSWIKI_ACTION} = 'save';
 }
 
 use Foswiki ();
