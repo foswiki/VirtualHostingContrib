@@ -6,6 +6,7 @@ lib/Foswiki/Configure/Checkers/VirtualHostingContrib/VirtualHostsDir.pm 0644
 lib/Foswiki/Configure/Wizards/CreateVHost.pm 0644
 lib/Foswiki/Contrib/VirtualHostingContrib/Config.spec 0644
 lib/Foswiki/Contrib/VirtualHostingContrib/DEPENDENCIES 0644
+lib/Foswiki/Contrib/VirtualHostingContrib/MANIFEST 0644
 lib/Foswiki/Contrib/VirtualHostingContrib.pm 0644
 lib/Foswiki/Contrib/VirtualHostingContrib/VirtualHost.pm 0644
 lib/Foswiki/Engine/VirtualHostingFastCGI.pm 0644

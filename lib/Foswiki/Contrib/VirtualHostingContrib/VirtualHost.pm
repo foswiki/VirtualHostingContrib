@@ -1,6 +1,6 @@
 # Contrib for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# Copyright (C) 2010-2022 Foswiki Contributors.
+# Copyright (C) 2010-2025 Foswiki Contributors.
 # All Rights Reserved. TWiki Contributors and Foswiki Contributors
 # are listed in the AUTHORS file in the root of this distribution.
 # NOTE: Please extend that file, not this notice.
@@ -36,6 +36,8 @@ sub find {
   my ($class, $hostname, $port) = @_;
   $hostname = _validate_hostname($hostname);
   return unless $hostname;
+
+  my $origHostname = $hostname;
 
   # check whether the given virtual host directory exists or not
   if (!$class->exists($hostname)) {
@@ -84,17 +86,23 @@ sub find {
 
   # Make sure configure is unusable by any host other than the DefaultUrlHost.
   # This change will persist under fcgi, so we need to restore it under the base host.
-  if ( $VirtualUrlHost ne $Foswiki::cfg{DefaultUrlHost} ) {
-      $Foswiki::cfg{Plugins}{ConfigurePlugin}{Enabled} = 0;
+  if ( _isDefaultHost($hostname) || _isDefaultHost($origHostname)) {
+      $Foswiki::cfg{Plugins}{ConfigurePlugin}{Enabled} = 1;
   }
   else {
-      $Foswiki::cfg{Plugins}{ConfigurePlugin}{Enabled} = 1;
+      $Foswiki::cfg{Plugins}{ConfigurePlugin}{Enabled} = 0;
   }
 
   $self->{config}->{TemplatePath} = $self->_template_path();
   $self->_load_config();
 
   return $self;
+}
+
+sub _isDefaultHost {
+  my $hostname = shift;
+
+  return $Foswiki::cfg{DefaultUrlHost} =~ /^https?:\/\/\Q$hostname\E(:(80|443))?$/ ? 1:0;
 }
 
 sub hostname {

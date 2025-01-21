@@ -1,4 +1,4 @@
-%META:TOPICINFO{author="ProjectContributor" date="1496108938" format="1.1" version="1"}%
+%META:TOPICINFO{author="ProjectContributor" date="1737451317" format="1.1" version="1"}%
 ---+!! !VirtualHostingContrib
 <img style="float:right" src="%ATTACHURL%/logo-colivre.png" />
 %FORMFIELD{"Description"}%
@@ -547,6 +547,7 @@ Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 %$DEPENDENCIES%
 
 ---++ Change History
+|  21 Jan 2025 | default host sometimes cannot use bin/configure |
 |  05 May 2022 | rewrite to prevent monkey-patching the core engine; \
                  support warming up in newer !FastCGIEngineContrib; \
                  fixed multiple memory and filehandler leaks; \
@@ -575,7 +576,7 @@ Many thanks to [[http://colivre.coop.br/][Colivre]] for supporting this work.
 %META:FIELD{name="Release" title="Release" value="%25$RELEASE%25"}%
 %META:FIELD{name="Description" title="Description" value="%25$SHORTDESCRIPTION%25"}%
 %META:FIELD{name="Repository" title="Repository" value="https://github.com/foswiki/%25TOPIC%25"}%
-%META:FIELD{name="Copyright" title="Copyright" value="&copy; 2010 [[http://www.colivre.coop.br/][Colivre]], &copy; 2011-2022 Foswiki Contributors"}%
+%META:FIELD{name="Copyright" title="Copyright" value="&copy; 2010 [[http://www.colivre.coop.br/][Colivre]], &copy; 2011-2025 Foswiki Contributors"}%
 %META:FIELD{name="License" title="License" value="[[http://www.gnu.org/licenses/gpl.html][GPL (Gnu General Public License)]]"}%
 %META:FIELD{name="Home" title="Home" value="Foswiki:Extensions/%25TOPIC%25"}%
 %META:FIELD{name="Support" title="Support" value="Foswiki:Support/%25TOPIC%25"}%

@@ -4,7 +4,7 @@
 #
 # Copyright (C) 2004 Wind River Systems Inc.
 # Copyright (C) 2004-2007 Peter Thoeny, peter@thoeny.org
-# Copyright (C) 2008-2017 Foswiki Contributors
+# Copyright (C) 2008-2025 Foswiki Contributors
 # and TWiki Contributors.
 #
 # For licensing info read LICENSE file in the Foswiki root.
@@ -79,7 +79,7 @@ if ($hostname) {
 
 sub doit {
     printf STDERR "=> Processing %s\n", $Foswiki::Contrib::VirtualHostingContrib::VirtualHost::CURRENT if $verbose;
-    my $session = new Foswiki();
+    my $session = new Foswiki('admin');
     if ($Foswiki::Contrib::MailerContrib::RELEASE eq '4 Dec 2009') {
         # Foswiki 1.0.x
         Foswiki::Contrib::MailerContrib::mailNotify(

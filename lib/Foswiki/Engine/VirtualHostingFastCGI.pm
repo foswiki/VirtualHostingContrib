@@ -1,6 +1,6 @@
 # Contrib for Foswiki - The Free and Open Source Wiki, http://foswiki.org/
 #
-# Copyright (C) 2010-2022 Foswiki Contributors.
+# Copyright (C) 2010-2025 Foswiki Contributors.
 # All Rights Reserved. TWiki Contributors and Foswiki Contributors
 # are listed in the AUTHORS file in the root of this distribution.
 # NOTE: Please extend that file, not this notice.
